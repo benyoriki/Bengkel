@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOTOCARE MOTOR — Bengkel Motor Modern</title>
+<meta name="description" content="Servis motor profesional, spare part berkualitas, harga transparan, antrean servis live.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="#beranda"><span class="mark">M</span><span><b data-s="name">MOTOCARE MOTOR</b><small>Bengkel Motor Modern</small></span></a>
+  <nav id="nav">
+    <a href="#beranda">Beranda</a><a href="#layanan">Layanan</a><a href="#produk">Produk</a><a href="#promo">Promo</a><a href="#antrean">Antrean</a><a href="#booking">Booking</a><a href="#kontak">Kontak</a>
+  </nav>
+  <div class="tools">
+    <button id="themeBtn" class="icon" aria-label="Ganti tema">◐</button>
+    <a id="waTop" class="btn sm" target="_blank" rel="noopener">WhatsApp</a>
+  </div>
+</header>
+
+<main>
+<section id="beranda" class="hero">
+  <div class="hero-txt">
+    <h1>Performa Motor Maksimal, Perjalanan Lebih Aman.</h1>
+    <p>Servis motor profesional, spare part berkualitas, harga transparan, dan antrean servis yang bisa dipantau langsung.</p>
+    <div class="cta">
+      <a class="btn" href="#booking">Booking Servis</a>
+      <a class="btn ghost" href="#antrean">Cek Antrean Live</a>
+      <a class="btn ghost" href="#promo">Lihat Promo</a>
+    </div>
+    <ul class="trust"><li>Teknisi profesional</li><li>Harga transparan</li><li>Spare part original</li><li>Garansi servis</li></ul>
+  </div>
+  <div class="hero-art" aria-hidden="true"><div class="gear">⚙</div><div class="stripe"></div><div class="stripe s2"></div></div>
+</section>
+
+<section id="promo" class="sec">
+  <h2>Promo Servis <span id="promoMonth">Oktober 2026</span></h2>
+  <p class="sub">Harga dan periode promo diatur admin. Promo yang lewat tanggal berakhir otomatis ditandai selesai.</p>
+  <div id="promoGrid" class="grid4"></div>
+</section>
+
+<section id="layanan" class="sec">
+  <h2>Layanan Bengkel</h2>
+  <div id="svcGrid" class="grid4"></div>
+</section>
+
+<section id="produk" class="sec">
+  <h2>Produk & Spare Part</h2>
+  <div class="bar"><input id="pSearch" type="search" placeholder="Cari nama atau SKU…" aria-label="Cari produk"><select id="pCat" aria-label="Kategori"></select></div>
+  <div id="prodGrid" class="grid4"></div>
+</section>
+
+<section id="antrean" class="sec">
+  <h2>Antrean Servis Live</h2>
+  <p class="sub">Data diambil dari work order di browser ini. Nama dan nomor telepon pelanggan tidak ditampilkan.</p>
+  <div class="bar"><input id="qSearch" type="search" placeholder="Cari nomor antrean, mis. A-001" aria-label="Cari antrean"><div id="qChips" class="chips"></div></div>
+  <div id="qList" class="qlist"></div>
+</section>
+
+<section id="booking" class="sec two">
+  <div>
+    <h2>Booking Servis</h2>
+    <form id="bkForm" novalidate>
+      <label>Nama<input name="nama" required autocomplete="name"></label>
+      <label>Nomor WhatsApp<input name="wa" required inputmode="tel" placeholder="08xxxxxxxxxx"></label>
+      <label>Nomor polisi<input name="plat" required placeholder="B 1234 ABC"></label>
+      <label>Jenis motor<input name="motor" required placeholder="Honda Beat"></label>
+      <label>Layanan<select name="layanan" id="bkSvc" required></select></label>
+      <label>Tanggal datang<input type="date" name="tgl" required></label>
+      <label>Waktu<select name="jam" required><option>09:00</option><option>11:00</option><option>13:00</option><option>15:00</option></select></label>
+      <label class="full">Keluhan / catatan<textarea name="catatan" rows="3"></textarea></label>
+      <button class="btn full" type="submit">Kirim Booking</button>
+    </form>
+    <div id="bkResult" class="card" hidden></div>
+  </div>
+  <div>
+    <h2>Cek Status Booking</h2>
+    <form id="chkForm" class="inline"><input id="chkCode" placeholder="Kode booking, mis. BK-261017-ABCD" required><button class="btn">Cek</button></form>
+    <div id="chkResult" class="card" hidden></div>
+  </div>
+</section>
+
+<section id="kontak" class="sec two">
+  <div class="card"><h3>Jam Operasional</h3><p data-s="hours"></p><h3>Alamat</h3><p data-s="address"></p><a id="mapBtn" class="btn ghost" target="_blank" rel="noopener">Buka Google Maps</a></div>
+  <div class="card"><h3>Pertanyaan umum</h3>
+    <details><summary>Apakah perlu booking?</summary><p>Tidak wajib, tetapi booking mempercepat pelayanan.</p></details>
+    <details><summary>Apakah harga bisa berubah?</summary><p>Estimasi awal bisa berubah setelah pemeriksaan. Tambahan biaya selalu dimintakan persetujuan Anda.</p></details>
+    <details><summary>Bagaimana pembayaran?</summary><p>Tunai, transfer, atau QRIS, dicatat oleh kasir.</p></details>
+  </div>
+</section>
+</main>
+
+<footer><p>© <span data-s="name"></span> · Website & Sistem Developer by benyoriki.com</p></footer>
+
+<nav class="bottom" aria-label="Navigasi cepat">
+  <a href="#beranda">Beranda</a><a href="#layanan">Layanan</a><a href="#produk">Produk</a><a href="#antrean">Antrean</a><a href="#booking">Booking</a>
+</nav>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="script.js"></script>
+</body>
+</html>
