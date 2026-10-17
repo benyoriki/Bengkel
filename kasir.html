@@ -1,0 +1,53 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Kasir — MOTOCARE MOTOR</title><link rel="stylesheet" href="style.css"></head><body>
+<header class="top"><a class="logo" href="index.html"><span class="mark">M</span><span><b>MOTOCARE MOTOR</b><small>Kasir</small></span></a><nav id="nav"><a href="index.html">Beranda</a><a href="admin.html">Admin</a><a href="kasir.html">Kasir</a></nav><div class="tools"><button id="themeBtn" class="icon" aria-label="Ganti tema">◐</button></div></header>
+<main class="app"><div class="warn">Mode prototype tanpa login. QRIS dan transfer hanya dicatat manual, tidak diverifikasi otomatis.</div>
+<div class="kgrid"><section class="card"><h2>Tagihan Baru</h2>
+<label>Work order<select id="woSel"></select></label>
+<div class="bar" style="margin-top:12px"><select id="svcSel" aria-label="Jasa"></select><button class="btn sm" id="addSvc">+ Jasa</button></div>
+<div class="bar"><select id="prdSel" aria-label="Spare part"></select><button class="btn sm" id="addPrd">+ Part</button></div>
+<div id="lines"></div>
+<div class="line"><span>Diskon (Rp)</span><span></span><input id="disc" type="number" min="0" value="0" inputmode="numeric"><span></span></div>
+<p>Total <span class="tot" id="total">Rp 0</span></p>
+<div class="bar"><select id="method" aria-label="Metode"><option>Tunai</option><option>Transfer</option><option>QRIS</option></select><input id="paid" type="number" min="0" placeholder="Nominal dibayar" inputmode="numeric"></div>
+<p class="muted">Kembalian: <b id="chg">Rp 0</b></p>
+<button class="btn" id="pay" style="width:100%">Proses Pembayaran</button></section>
+<section><h2>Transaksi Terakhir</h2><div id="txs" class="rows"></div></section></div></main>
+<div id="receipt"></div><div id="toast" role="status"></div>
+<script src="core.js"></script>
+<script>
+let items=[];
+const qs=new URLSearchParams(location.search);
+function fillSel(){
+  const W=DB.read(K.wo,[]).filter(w=>!w.paid&&w.status!=='Dibatalkan');
+  $('#woSel').innerHTML='<option value="">Tanpa work order (penjualan langsung)</option>'+W.map(w=>`<option value="${w.id}" ${qs.get('wo')===w.id?'selected':''}>${esc(w.no)} — ${esc(w.motor)} — ${esc(w.job)}${w.demo?' [DEMO]':''}</option>`).join('');
+  $('#svcSel').innerHTML=DB.read(K.services,[]).map(s=>`<option value="${s.id}">${esc(s.name)} — ${rp(s.fee)}</option>`).join('');
+  $('#prdSel').innerHTML=DB.read(K.products,[]).map(p=>`<option value="${p.sku}" ${p.stock<=0?'disabled':''}>${esc(p.name)} — ${rp(p.price)} (stok ${p.stock})</option>`).join('');
+}
+function calc(){const sub=items.reduce((a,i)=>a+i.qty*i.price,0),d=Math.max(0,+$('#disc').value||0),t=sub-d;
+  $('#total').textContent=rp(t);$('#chg').textContent=rp(Math.max(0,(+$('#paid').value||0)-t));
+  $('#lines').innerHTML=items.map((i,x)=>`<div class="line"><span>${esc(i.name)}<br><small class="muted">${rp(i.price)}</small></span><input type="number" min="1" value="${i.qty}" data-q="${x}" aria-label="Jumlah"><b>${rp(i.qty*i.price)}</b><button class="icon" data-r="${x}" aria-label="Hapus">✕</button></div>`).join('')||'<div class="empty">Belum ada item.</div>'}
+function add(it){const f=items.find(i=>i.name===it.name);f?f.qty++:items.push(it);calc()}
+$('#addSvc').onclick=()=>{const s=DB.read(K.services,[]).find(x=>x.id===$('#svcSel').value);if(s)add({name:s.name,qty:1,price:s.fee,sku:null})};
+$('#addPrd').onclick=()=>{const p=DB.read(K.products,[]).find(x=>x.sku===$('#prdSel').value);if(p)add({name:p.name,qty:1,price:p.price,sku:p.sku})};
+$('#lines').onclick=e=>{if(e.target.dataset.r!=null){items.splice(+e.target.dataset.r,1);calc()}};
+$('#lines').oninput=e=>{if(e.target.dataset.q!=null){items[+e.target.dataset.q].qty=Math.max(1,parseInt(e.target.value)||1);calc()}};
+$('#disc').oninput=$('#paid').oninput=calc;
+$('#pay').onclick=function(){
+  this.disabled=true;
+  const r=payInvoice($('#woSel').value||null,items,Math.max(0,+$('#disc').value||0),$('#method').value,+$('#paid').value||0);
+  this.disabled=false;
+  if(!r.ok){toast(r.msg);return}
+  toast('Pembayaran dicatat: '+r.tx.id);receipt(r.tx);items=[];$('#paid').value='';$('#disc').value=0;fillSel();calc();hist();setTimeout(()=>print(),200)};
+function receipt(t){const s=S(),w=DB.read(K.wo,[]).find(x=>x.id===t.woId);
+  $('#receipt').innerHTML=`<div style="text-align:center"><b>${esc(s.name)}</b><br>${esc(s.address)}</div><hr>${t.id}<br>${new Date(t.t).toLocaleString('id-ID')}<br>Kasir: ${esc(t.cashier)}${w?'<br>WO: '+esc(w.no)+'<br>'+esc(w.motor):''}<hr>`+
+  t.items.map(i=>`<div>${esc(i.name)}</div><div class="rc"><span>${i.qty} x ${rp(i.price)}</span><span>${rp(i.qty*i.price)}</span></div>`).join('')+
+  `<hr><div class="rc"><span>Diskon</span><span>${rp(t.disc)}</span></div><div class="rc"><b>Total</b><b>${rp(t.total)}</b></div><div class="rc"><span>${esc(t.method)}</span><span>${rp(t.paid)}</span></div><div class="rc"><span>Kembali</span><span>${rp(t.change)}</span></div><hr><div style="text-align:center">Terima kasih</div>`}
+function hist(){const T=DB.read(K.tx,[]).slice().reverse().slice(0,15);
+  $('#txs').innerHTML=T.map(t=>`<div class="row"><div><b>${t.id}</b> <span class="badge ${t.status==='Lunas'?'b-ok':'b-bad'}">${t.status}</span></div><div class="muted">${rp(t.total)} · ${esc(t.method)} · ${new Date(t.t).toLocaleString('id-ID')}${t.reason?'<br>Alasan: '+esc(t.reason):''}</div>
+  <div class="acts"><button class="btn ghost" data-p="${t.id}">Cetak ulang</button>${t.status==='Lunas'?`<button class="btn red" data-c="${t.id}">Batalkan</button>`:''}</div></div>`).join('')||'<div class="empty">Belum ada transaksi.</div>'}
+$('#txs').onclick=e=>{const d=e.target.dataset;
+  if(d.p){receipt(DB.read(K.tx,[]).find(t=>t.id===d.p));print()}
+  if(d.c){const r=prompt('Alasan pembatalan (stok dikembalikan, refund dicatat):');if(r===null)return;const x=cancelTx(d.c,r);toast(x.ok?'Transaksi dibatalkan':x.msg);fillSel();hist()}};
+$('#themeBtn').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;DB.write(K.theme,t)};
+document.documentElement.dataset.theme=DB.read(K.theme,'dark');fillSel();calc();hist();
+</script></body></html>

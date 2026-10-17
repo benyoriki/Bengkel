@@ -1,0 +1,41 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Admin — MOTOCARE MOTOR</title><link rel="stylesheet" href="style.css"></head><body>
+<header class="top"><a class="logo" href="index.html"><span class="mark">M</span><span><b>MOTOCARE MOTOR</b><small>Dashboard Admin</small></span></a><nav id="nav"><a href="index.html">Beranda</a><a href="admin.html">Admin</a><a href="kasir.html">Kasir</a></nav><div class="tools"><button id="themeBtn" class="icon" aria-label="Ganti tema">◐</button></div></header>
+<main class="app">
+<div class="warn">Mode prototype: belum ada login sungguhan, dan data hanya ada di browser ini. Jangan dipakai untuk data pelanggan nyata.</div>
+<div class="apptabs"><a class="btn sm ghost" href="kasir.html">Buka Kasir</a><button class="btn sm ghost" id="bExp">Backup JSON</button><label class="btn sm ghost" style="cursor:pointer">Restore JSON<input id="bImp" type="file" accept=".json" hidden></label><button class="btn sm red" id="bDemo">Hapus data antrean DEMO</button></div>
+<h2>Booking Masuk</h2><div id="bk" class="rows"></div>
+<h2 style="margin-top:28px">Work Order & Antrean</h2><div id="wo" class="rows"></div>
+</main><div id="toast" role="status"></div>
+<script src="core.js"></script>
+<script>
+const $b=$('#bk'),$w=$('#wo');
+function draw(){
+  const B=DB.read(K.bookings,[]).slice().reverse();
+  $b.innerHTML=B.map(b=>`<div class="row"><div><b>${esc(b.code)}</b> <span class="badge ${b.status==='Ditolak'?'b-bad':b.status==='Menunggu konfirmasi'?'b-warn':'b-ok'}">${esc(b.status)}</span></div>
+  <div class="muted">${esc(b.nama)} · ${esc(b.wa)} · ${esc(b.plat)} · ${esc(b.motor)}<br>${esc(b.layanan)} · ${esc(b.tgl)} ${esc(b.jam)}${b.catatan?'<br>“'+esc(b.catatan)+'”':''}</div>
+  <div class="acts">${b.status==='Menunggu konfirmasi'?`<button class="btn green" data-a="ok" data-id="${b.id}">Konfirmasi</button><button class="btn red" data-a="no" data-id="${b.id}">Tolak</button>`:''}
+  ${b.status==='Dikonfirmasi'?`<button class="btn" data-a="wo" data-id="${b.id}">Pelanggan datang → buat work order</button>`:''}</div></div>`).join('')||'<div class="empty">Belum ada booking. Booking dari halaman publik muncul di sini.</div>';
+  const W=DB.read(K.wo,[]).slice().reverse();
+  $w.innerHTML=W.map(w=>`<div class="row"><div><b>${esc(w.no)}</b> ${w.demo?'<span class="badge">DEMO</span>':''} <span class="badge ${stCls(w.status)}">${esc(w.status)}</span>${w.paid?' <span class="badge b-ok">Lunas</span>':''}</div>
+  <div class="muted">${esc(w.motor)}${w.plat?' · '+esc(w.plat):''} · ${esc(w.job)}${w.cust?' · '+esc(w.cust):''}</div>
+  <div class="acts"><select data-f="status" data-id="${w.id}" aria-label="Status">${STATUS.map(s=>`<option ${s===w.status?'selected':''}>${s}</option>`).join('')}</select>
+  <input data-f="mech" data-id="${w.id}" value="${esc(w.mech||'')}" placeholder="Mekanik" aria-label="Mekanik" style="max-width:160px"></div>
+  <div class="acts"><button class="btn ghost" data-a="note" data-id="${w.id}">Catatan pekerjaan</button>${w.demo||w.paid?'':`<a class="btn" href="kasir.html?wo=${w.id}">Lanjut ke Kasir</a>`}</div>
+  <ul class="hist">${(w.hist||[]).map(h=>`<li>${new Date(h.t).toLocaleString('id-ID')} — ${esc(h.s)}${h.n?': '+esc(h.n):''}</li>`).join('')||'<li>Belum ada riwayat</li>'}</ul></div>`).join('')||'<div class="empty">Belum ada work order.</div>';
+}
+document.addEventListener('click',e=>{const a=e.target.dataset.a,id=e.target.dataset.id;if(!a)return;
+  if(a==='ok'){setBooking(id,'Dikonfirmasi');toast('Booking dikonfirmasi')}
+  if(a==='no'){if(!confirm('Tolak booking ini?'))return;setBooking(id,'Ditolak');toast('Booking ditolak')}
+  if(a==='wo'){const w=bookingToWO(id);toast(w?'Work order '+w.no+' dibuat':'Gagal membuat work order')}
+  if(a==='note'){const n=prompt('Catatan pekerjaan / hasil pemeriksaan:');if(n&&n.trim())setWO(id,{},n.trim())}
+  draw()});
+document.addEventListener('change',e=>{const f=e.target.dataset.f,id=e.target.dataset.id;if(!f)return;
+  if(f==='status')setWO(id,{status:e.target.value},'Diubah oleh admin');
+  if(f==='mech')setWO(id,{mech:e.target.value.trim()},'Mekanik: '+e.target.value.trim());
+  toast('Tersimpan');draw()});
+$('#bDemo').onclick=()=>{if(confirm('Hapus semua antrean DEMO? Work order nyata tidak terpengaruh.')){DB.write(K.wo,DB.read(K.wo,[]).filter(w=>!w.demo));log('Data demo dihapus');draw()}};
+$('#bExp').onclick=()=>download('motocare-backup-'+today()+'.json',exportAll(),'application/json');
+$('#bImp').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{if(!confirm('Timpa data saat ini dengan backup ini?'))return;importAll(r.result);toast('Restore berhasil');draw()}catch(x){toast('Gagal: '+x.message)}};r.readAsText(f)};
+$('#themeBtn').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;DB.write(K.theme,t)};
+document.documentElement.dataset.theme=DB.read(K.theme,'dark');draw();
+</script></body></html>

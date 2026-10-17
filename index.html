@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e0f11'/%3E%3Cpath d='M12 48 28 14h9L26 48zm18 0 11-24h8L38 48z' fill='%23ff6a1a'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#0e0f11">
+<meta property="og:type" content="website"><meta property="og:title" content="MOTOCARE MOTOR — Bengkel Motor Modern"><meta property="og:description" content="Servis motor profesional, spare part berkualitas, harga transparan, antrean servis live.">
+<meta name="twitter:card" content="summary">
 <title>MOTOCARE MOTOR — Bengkel Motor Modern</title>
 <meta name="description" content="Servis motor profesional, spare part berkualitas, harga transparan, antrean servis live.">
 <link rel="stylesheet" href="style.css">
@@ -15,7 +19,7 @@
   </nav>
   <div class="tools">
     <button id="themeBtn" class="icon" aria-label="Ganti tema">◐</button>
-    <a id="waTop" class="btn sm" target="_blank" rel="noopener">WhatsApp</a>
+    <a class="btn ghost sm" href="admin.html">Staf</a><a id="waTop" class="btn sm" target="_blank" rel="noopener">WhatsApp</a>
   </div>
 </header>
 
@@ -31,7 +35,7 @@
     </div>
     <ul class="trust"><li>Teknisi profesional</li><li>Harga transparan</li><li>Spare part original</li><li>Garansi servis</li></ul>
   </div>
-  <div class="hero-art" aria-hidden="true"><div class="gear">⚙</div><div class="stripe"></div><div class="stripe s2"></div></div>
+  <div class="hero-art" aria-hidden="true"><svg viewBox="0 0 400 250" class="bike"><path d="M0 214h400" stroke="#2c3036" stroke-width="3"/><circle cx="95" cy="168" r="46" fill="none" stroke="currentColor" stroke-width="10"/><circle cx="95" cy="168" r="14" fill="#ff6a1a"/><circle cx="310" cy="168" r="46" fill="none" stroke="currentColor" stroke-width="10"/><circle cx="310" cy="168" r="14" fill="#ff6a1a"/><path d="M95 168 150 110h70l40-8 50 66M150 110l-20-30h-30M225 110l-30 58h-100M258 102l-12-38h-24" fill="none" stroke="#ff6a1a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M160 108c10-24 50-30 90-6l-12 14z" fill="#e5302b"/><rect x="170" y="94" width="70" height="12" rx="6" fill="currentColor"/></svg><div class="stripe"></div><div class="stripe s2"></div></div>
 </section>
 
 <section id="promo" class="sec">
@@ -53,7 +57,7 @@
 
 <section id="antrean" class="sec">
   <h2>Antrean Servis Live</h2>
-  <p class="sub">Data diambil dari work order di browser ini. Nama dan nomor telepon pelanggan tidak ditampilkan.</p>
+  <p class="sub">Data dari work order di browser ini (bukan live lintas perangkat). Item berlabel DEMO adalah contoh. Nama dan nomor telepon pelanggan tidak ditampilkan.</p>
   <div class="bar"><input id="qSearch" type="search" placeholder="Cari nomor antrean, mis. A-001" aria-label="Cari antrean"><div id="qChips" class="chips"></div></div>
   <div id="qList" class="qlist"></div>
 </section>
@@ -97,6 +101,7 @@
   <a href="#beranda">Beranda</a><a href="#layanan">Layanan</a><a href="#produk">Produk</a><a href="#antrean">Antrean</a><a href="#booking">Booking</a>
 </nav>
 <div id="toast" role="status" aria-live="polite"></div>
+<script src="core.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

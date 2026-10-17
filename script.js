@@ -1,55 +1,3 @@
-'use strict';
-/* ===== Lapisan data (localStorage; mudah diganti Firebase) ===== */
-const K={settings:'motocare_settings',services:'motocare_services',products:'motocare_products',promos:'motocare_promos',bookings:'motocare_bookings',wo:'motocare_work_orders',ver:'motocare_schema_version',theme:'motocare_theme'};
-const SCHEMA=1;
-const DB={
-  read(k,def){try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){console.warn('Data rusak:',k);return def}},
-  write(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){toast('Penyimpanan penuh atau diblokir. Ekspor data lalu kosongkan.');return false}}
-};
-const rp=n=>'Rp '+Number(n||0).toLocaleString('id-ID');
-const $=s=>document.querySelector(s);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2800)}
-
-function seed(){
-  if(DB.read(K.ver,0)>=SCHEMA)return;
-  DB.write(K.settings,{name:'MOTOCARE MOTOR',wa:'6281234567890',address:'Jl. Contoh Raya No. 12, Kota Anda',hours:'Senin–Sabtu 08.00–17.00 · Minggu tutup',maps:'https://maps.google.com/?q=bengkel+motor'});
-  DB.write(K.services,[
-    {id:'S1',ico:'🛢️',name:'Ganti oli mesin',desc:'Oli baru, cek kebocoran.',dur:'20 mnt',fee:20000},
-    {id:'S2',ico:'⚙️',name:'Servis CVT',desc:'Bersih CVT, roller, v-belt.',dur:'90 mnt',fee:80000},
-    {id:'S3',ico:'🛞',name:'Ganti ban luar',desc:'Pasang dan balancing.',dur:'40 mnt',fee:30000},
-    {id:'S4',ico:'🔧',name:'Servis ringan',desc:'Pemeriksaan dan setel.',dur:'60 mnt',fee:50000},
-    {id:'S5',ico:'🛠️',name:'Tune-up',desc:'Busi, filter, karburator/injeksi.',dur:'90 mnt',fee:100000},
-    {id:'S6',ico:'🛑',name:'Ganti kampas rem',desc:'Periksa rem, ganti kampas.',dur:'30 mnt',fee:25000},
-    {id:'S7',ico:'🔋',name:'Ganti aki',desc:'Uji kelistrikan dan pasang aki.',dur:'20 mnt',fee:15000},
-    {id:'S8',ico:'🏍️',name:'Turun mesin',desc:'Servis berat, pembongkaran mesin.',dur:'1–3 hari',fee:350000}]);
-  DB.write(K.products,[
-    {sku:'OLI-001',name:'Oli Mesin 10W-30',cat:'Oli',price:75000,stock:24,min:6},
-    {sku:'BAN-090',name:'Ban Luar 80/90',cat:'Ban',price:200000,stock:12,min:4},
-    {sku:'KMP-014',name:'Kampas Rem Depan',cat:'Rem',price:85000,stock:3,min:5},
-    {sku:'AKI-005',name:'Aki Motor 12V',cat:'Kelistrikan',price:250000,stock:10,min:3},
-    {sku:'BSI-002',name:'Busi Iridium',cat:'Mesin',price:65000,stock:0,min:5},
-    {sku:'VBT-008',name:'V-Belt Matic',cat:'CVT',price:140000,stock:8,min:3}]);
-  const y=new Date().getFullYear();
-  DB.write(K.promos,[
-    {id:'P1',name:'Paket Ganti Oli Hemat',normal:110000,promo:75000,from:'2026-10-01',to:'2026-10-31',tnc:'Oli mesin + jasa + cek kondisi motor.'},
-    {id:'P2',name:'Diskon Servis Ringan',normal:160000,promo:120000,from:'2026-10-01',to:'2026-10-31',tnc:'Cek mesin, rem, kelistrikan, CVT.'},
-    {id:'P3',name:'Paket Servis Lengkap',normal:315000,promo:250000,from:'2026-10-01',to:'2026-10-31',tnc:'Tune-up + ganti oli + cek injeksi.'},
-    {id:'P4',name:'Promo Ganti Ban',normal:235000,promo:200000,from:'2026-10-01',to:'2026-10-31',tnc:'Ban luar berkualitas + gratis pasang.'}]);
-  DB.write(K.bookings,[]);
-  DB.write(K.wo,[
-    {id:'WO1',no:'A-001',motor:'Honda Beat',job:'Ganti oli mesin',mech:'Andi',status:'Sedang dikerjakan',date:today(),eta:'11:30'},
-    {id:'WO2',no:'A-002',motor:'Yamaha NMAX',job:'Servis CVT',mech:'Budi',status:'Menunggu',date:today(),eta:'13:00'},
-    {id:'WO3',no:'A-003',motor:'Honda Vario',job:'Servis berat / turun mesin',mech:'Candra',status:'Pemeriksaan awal',date:today(),eta:'—'},
-    {id:'WO4',no:'A-004',motor:'Scoopy',job:'Ganti ban depan',mech:'Dedi',status:'Selesai',date:today(),eta:'10:15'},
-    {id:'WO5',no:'A-005',motor:'PCX',job:'Tune-up',mech:'Andi',status:'Menunggu spare part',date:today(),eta:'15:00'}]);
-  DB.write(K.ver,SCHEMA);
-}
-const S=()=>DB.read(K.settings,{});
-const STATUS=['Menunggu','Pemeriksaan awal','Sedang dikerjakan','Menunggu spare part','Menunggu persetujuan pelanggan','Selesai','Siap diambil','Dibatalkan'];
-const stCls=s=>({'Selesai':'b-ok','Siap diambil':'b-ok','Sedang dikerjakan':'b-acc','Menunggu':'b-warn','Pemeriksaan awal':'b-warn','Dibatalkan':'b-bad'}[s]||'b-warn');
-
 /* ===== Tampilan ===== */
 function waLink(text){return 'https://wa.me/'+S().wa+'?text='+encodeURIComponent(text)}
 function renderBase(){
@@ -88,7 +36,7 @@ function renderQueue(){
   $('#qChips').innerHTML=chips.map(c=>`<button class="chip ${c===qFilter?'on':''}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
   const q=$('#qSearch').value.trim().toLowerCase();
   const l=DB.read(K.wo,[]).filter(w=>(qFilter==='Semua'||w.status===qFilter)&&w.no.toLowerCase().includes(q));
-  $('#qList').innerHTML=l.map(w=>`<div class="q"><div class="no">${esc(w.no)}</div><div><b>${esc(w.motor)}</b><div class="muted">${esc(w.job)}</div></div>
+  $('#qList').innerHTML=l.map(w=>`<div class="q"><div class="no">${esc(w.no)}${w.demo?'<br><span class="badge">DEMO</span>':''}</div><div><b>${esc(w.motor)}</b><div class="muted">${esc(w.job)}</div></div>
   <div class="st"><span class="badge ${stCls(w.status)}">${esc(w.status)}</span> <span class="muted">Mekanik ${esc(w.mech||'-')} · Est. ${esc(w.eta||'-')}</span></div></div>`).join('')||'<div class="empty">Belum ada antrean untuk filter ini.</div>';
 }
 /* ===== Booking ===== */
@@ -117,7 +65,7 @@ function checkBooking(e){
 function setTheme(t){document.documentElement.dataset.theme=t;DB.write(K.theme,t)}
 setTheme(DB.read(K.theme,'dark'));
 $('#themeBtn').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
-seed();renderBase();renderPromos();renderServices();renderProducts();renderQueue();
+renderBase();renderPromos();renderServices();renderProducts();renderQueue();
 $('#bkForm').elements.tgl.min=today();
 $('#pSearch').oninput=renderProducts;$('#pCat').onchange=renderProducts;$('#qSearch').oninput=renderQueue;
 $('#qChips').onclick=e=>{const c=e.target.dataset.c;if(c){qFilter=c;renderQueue()}};
