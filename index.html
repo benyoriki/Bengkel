@@ -12,14 +12,15 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div id="splash" role="presentation"><div class="mark big">M</div><b>MOTOCARE MOTOR</b><span>Memuat…</span><div class="sp-bar"><i></i></div></div>
 <header class="top">
   <a class="logo" href="#beranda"><span class="mark">M</span><span><b data-s="name">MOTOCARE MOTOR</b><small>Bengkel Motor Modern</small></span></a>
   <nav id="nav">
-    <a href="#beranda">Beranda</a><a href="#layanan">Layanan</a><a href="#produk">Produk</a><a href="#promo">Promo</a><a href="#antrean">Antrean</a><a href="#booking">Booking</a><a href="#kontak">Kontak</a>
+    <a href="#beranda">Beranda</a><a href="#layanan">Layanan</a><a href="#produk">Produk</a><a href="#promo">Promo</a><a href="#antrean">Antrean</a><a href="#booking">Booking</a><a href="#kontak">Kontak</a><a href="login.html">Login</a>
   </nav>
   <div class="tools">
     <button id="themeBtn" class="icon" aria-label="Ganti tema">◐</button>
-    <a class="btn ghost sm" href="admin.html">Staf</a><a id="waTop" class="btn sm" target="_blank" rel="noopener">WhatsApp</a>
+    <a class="btn ghost sm lg" href="login.html">Login</a><a id="waTop" class="btn sm" target="_blank" rel="noopener">WhatsApp</a><button id="menuBtn" class="icon burger" aria-label="Buka menu" aria-controls="nav" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   </div>
 </header>
 
@@ -31,13 +32,18 @@
     <div class="cta">
       <a class="btn" href="#booking">Booking Servis</a>
       <a class="btn ghost" href="#antrean">Cek Antrean Live</a>
-      <a class="btn ghost" href="#promo">Lihat Promo</a>
+      <a id="waHero" class="btn ghost" target="_blank" rel="noopener">Chat WhatsApp</a>
     </div>
-    <ul class="trust"><li>Teknisi profesional</li><li>Harga transparan</li><li>Spare part original</li><li>Garansi servis</li></ul>
+    <ul class="trust"><li>Harga jasa terlihat di website</li><li>Booking online</li><li>Antrean bisa dipantau</li></ul>
   </div>
-  <div class="hero-art" aria-hidden="true"><svg viewBox="0 0 400 250" class="bike"><path d="M0 214h400" stroke="#2c3036" stroke-width="3"/><circle cx="95" cy="168" r="46" fill="none" stroke="currentColor" stroke-width="10"/><circle cx="95" cy="168" r="14" fill="#ff6a1a"/><circle cx="310" cy="168" r="46" fill="none" stroke="currentColor" stroke-width="10"/><circle cx="310" cy="168" r="14" fill="#ff6a1a"/><path d="M95 168 150 110h70l40-8 50 66M150 110l-20-30h-30M225 110l-30 58h-100M258 102l-12-38h-24" fill="none" stroke="#ff6a1a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M160 108c10-24 50-30 90-6l-12 14z" fill="#e5302b"/><rect x="170" y="94" width="70" height="12" rx="6" fill="currentColor"/></svg><div class="stripe"></div><div class="stripe s2"></div></div>
+  <div class="hero-art"><img class="photo" src="hero.webp" width="800" height="600" alt="Mekanik sedang mengerjakan motor di bengkel" fetchpriority="high" decoding="async" onerror="this.remove()"><svg viewBox="0 0 400 250" class="bike" aria-hidden="true"><path d="M0 214h400" stroke="#2c3036" stroke-width="3"/><circle cx="95" cy="168" r="46" fill="none" stroke="currentColor" stroke-width="10"/><circle cx="95" cy="168" r="14" fill="#ff6a1a"/><circle cx="310" cy="168" r="46" fill="none" stroke="currentColor" stroke-width="10"/><circle cx="310" cy="168" r="14" fill="#ff6a1a"/><path d="M95 168 150 110h70l40-8 50 66M150 110l-20-30h-30M225 110l-30 58h-100M258 102l-12-38h-24" fill="none" stroke="#ff6a1a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M160 108c10-24 50-30 90-6l-12 14z" fill="#e5302b"/><rect x="170" y="94" width="70" height="12" rx="6" fill="currentColor"/></svg><div class="stripe"></div><div class="stripe s2"></div></div>
 </section>
 
+<section class="sec why"><div class="grid4">
+<div class="card"><h3>Harga jasa transparan</h3><p class="muted">Tarif jasa tampil di website, terpisah dari harga spare part.</p></div>
+<div class="card"><h3>Booking tanpa telepon</h3><p class="muted">Isi form, dapat kode booking, lalu konfirmasi lewat WhatsApp.</p></div>
+<div class="card"><h3>Antrean bisa dipantau</h3><p class="muted">Lihat status motor Anda dari HP tanpa menunggu di bengkel.</p></div>
+<div class="card"><h3>Biaya tambahan disetujui dulu</h3><p class="muted">Pekerjaan di luar estimasi awal hanya dikerjakan setelah Anda setuju.</p></div></div></section>
 <section id="promo" class="sec">
   <h2>Promo Servis <span id="promoMonth">Oktober 2026</span></h2>
   <p class="sub">Harga dan periode promo diatur admin. Promo yang lewat tanggal berakhir otomatis ditandai selesai.</p>
@@ -52,6 +58,7 @@
 <section id="produk" class="sec">
   <h2>Produk & Spare Part</h2>
   <div class="bar"><input id="pSearch" type="search" placeholder="Cari nama atau SKU…" aria-label="Cari produk"><select id="pCat" aria-label="Kategori"></select></div>
+  <div id="pChips" class="chips pm"></div><p id="pHint" class="muted pm">Pilih kategori, atau ketuk “Semua Produk” untuk melihat seluruh daftar.</p>
   <div id="prodGrid" class="grid4"></div>
 </section>
 
@@ -62,6 +69,7 @@
   <div id="qList" class="qlist"></div>
 </section>
 
+<section class="sec"><h2>Cara Kerja Booking</h2><ol class="steps"><li><b>Booking</b><span>Isi form di bawah atau datang langsung.</span></li><li><b>Konfirmasi</b><span>Admin menghubungi Anda lewat WhatsApp.</span></li><li><b>Pemeriksaan</b><span>Motor diperiksa dan estimasi biaya disampaikan.</span></li><li><b>Pantau &amp; bayar</b><span>Lihat status di antrean, bayar di kasir.</span></li></ol></section>
 <section id="booking" class="sec two">
   <div>
     <h2>Booking Servis</h2>
@@ -97,9 +105,6 @@
 
 <footer><p>© <span data-s="name"></span> · Website & Sistem Developer by benyoriki.com</p></footer>
 
-<nav class="bottom" aria-label="Navigasi cepat">
-  <a href="#beranda">Beranda</a><a href="#layanan">Layanan</a><a href="#produk">Produk</a><a href="#antrean">Antrean</a><a href="#booking">Booking</a>
-</nav>
 <div id="toast" role="status" aria-live="polite"></div>
 <script src="core.js"></script>
 <script src="script.js"></script>

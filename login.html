@@ -1,0 +1,17 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Login — MOTOCARE MOTOR</title><link rel="stylesheet" href="style.css"></head><body>
+<main class="login"><a class="logo" href="index.html" style="margin-bottom:16px"><span class="mark">M</span><span><b>MOTOCARE MOTOR</b><small>Login Staf</small></span></a>
+<div class="card"><h2>Masuk</h2>
+<form id="f" novalidate><label>Username<input name="u" autocomplete="username" required></label><label>Password<input name="p" type="password" autocomplete="current-password" required></label><button class="btn" type="submit">Login</button></form>
+<p id="err" class="neg" role="alert" hidden></p>
+<hr style="border:0;border-top:1px solid var(--line);width:100%"><p class="muted" style="margin:0">Akun demo (langsung masuk):</p>
+<button class="btn ghost" data-d="admin">Masuk sebagai Admin (Demo)</button><button class="btn ghost" data-d="owner">Masuk sebagai Owner (Demo)</button><button class="btn ghost" data-d="kasir">Masuk sebagai Kasir (Demo)</button>
+<p class="muted" style="margin:0;font-size:.8rem">Prototype: login ini hanya di browser dan bukan keamanan sungguhan. Jangan simpan data pelanggan nyata. Untuk operasional nyata gunakan autentikasi server (mis. Firebase Auth).</p></div>
+<p style="text-align:center"><a href="index.html" class="muted">← Kembali ke website</a></p></main>
+<script src="core.js"></script>
+<script>
+const s0=sess();if(s0)location.replace(homeOf(s0.role));
+function go(u,p){const s=login(u,p);if(!s){$('#err').hidden=false;$('#err').textContent='Username atau password salah.';return}location.href=homeOf(s.role)}
+$('#f').onsubmit=e=>{e.preventDefault();go(e.target.u.value.trim(),e.target.p.value)};
+document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const a=USERS.find(x=>x.u===b.dataset.d);go(a.u,a.p)});
+document.documentElement.dataset.theme=DB.read(K.theme,'dark');
+</script><div id="toast"></div></body></html>

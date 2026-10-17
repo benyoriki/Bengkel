@@ -1,41 +1,66 @@
 <!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Admin — MOTOCARE MOTOR</title><link rel="stylesheet" href="style.css"></head><body>
-<header class="top"><a class="logo" href="index.html"><span class="mark">M</span><span><b>MOTOCARE MOTOR</b><small>Dashboard Admin</small></span></a><nav id="nav"><a href="index.html">Beranda</a><a href="admin.html">Admin</a><a href="kasir.html">Kasir</a></nav><div class="tools"><button id="themeBtn" class="icon" aria-label="Ganti tema">◐</button></div></header>
-<main class="app">
-<div class="warn">Mode prototype: belum ada login sungguhan, dan data hanya ada di browser ini. Jangan dipakai untuk data pelanggan nyata.</div>
-<div class="apptabs"><a class="btn sm ghost" href="kasir.html">Buka Kasir</a><button class="btn sm ghost" id="bExp">Backup JSON</button><label class="btn sm ghost" style="cursor:pointer">Restore JSON<input id="bImp" type="file" accept=".json" hidden></label><button class="btn sm red" id="bDemo">Hapus data antrean DEMO</button></div>
-<h2>Booking Masuk</h2><div id="bk" class="rows"></div>
-<h2 style="margin-top:28px">Work Order & Antrean</h2><div id="wo" class="rows"></div>
+<header class="top"><a class="logo" href="index.html"><span class="mark">M</span><span><b>MOTOCARE MOTOR</b><small>Dashboard Admin</small></span></a><nav id="nav"><a href="index.html">Website</a><a href="kasir.html">Kasir</a><a href="#" onclick="logout();return false">Keluar</a></nav><div class="tools"><button id="themeBtn" class="icon" aria-label="Ganti tema">◐</button></div></header>
+<main class="app"><div class="apptabs"><a id="back" class="btn sm ghost" href="index.html">← Kembali</a><button class="btn sm ghost" onclick="logout()">Keluar</button></div>
+<div class="warn">Prototype: data tersimpan di browser ini saja (tidak live lintas perangkat) dan login bukan keamanan sungguhan.</div>
+<div class="apptabs" id="tabs"><button class="btn sm ghost on" data-t="ring">Ringkasan</button><button class="btn sm ghost" data-t="ant">Booking &amp; Antrean</button><button class="btn sm ghost" data-t="stk">Stok</button><button class="btn sm ghost" data-t="in">Barang Masuk</button><button class="btn sm ghost" data-t="out">Barang Keluar</button><button class="btn sm ghost" data-t="kas">Kas</button><button class="btn sm ghost" data-t="set">Data</button></div>
+
+<section data-tab="ring" id="ring"></section>
+
+<section data-tab="ant" hidden><h2>Booking Masuk</h2><div id="bk" class="rows"></div><h2 style="margin-top:28px">Work Order &amp; Antrean</h2><div id="wo" class="rows"></div></section>
+
+<section data-tab="stk" hidden><h2>Stok Barang</h2><input id="sq" type="search" placeholder="Cari SKU atau nama…" aria-label="Cari stok" style="margin-bottom:12px"><div id="stkL" class="rows"></div>
+<details class="card" style="margin-top:16px"><summary><b>+ Produk baru</b></summary><form data-form="prod" style="margin-top:12px"><label>SKU<input name="sku" required></label><label>Nama<input name="name" required></label><label>Kategori<input name="cat"></label><label>Harga jual (Rp)<input name="price" type="number" min="0" required inputmode="numeric"></label><label>Stok minimum<input name="min" type="number" min="0" inputmode="numeric"></label><button class="btn full">Simpan Produk</button></form><p class="muted">Stok awal 0. Tambahkan stok lewat Barang Masuk agar tercatat.</p></details></section>
+
+<section data-tab="in" hidden><h2>Barang Masuk (Pembelian)</h2><form data-form="in" class="card"><label>Produk<select name="sku" class="psel" required></select></label><label>Supplier<input name="supplier"></label><label>No. faktur<input name="invoice"></label><label>Jumlah<input name="qty" type="number" min="1" step="1" required inputmode="numeric"></label><label>Harga beli / unit (Rp)<input name="cost" type="number" min="0" required inputmode="numeric"></label><label>Status<select name="status"><option>Lunas</option><option>Utang</option></select></label><label>Metode bayar<select name="method"><option>Tunai</option><option>Transfer</option></select></label><button class="btn full">Simpan Pembelian</button></form>
+<p class="muted">Pembelian lunas masuk Kas Keluar. Pembelian utang tidak mengurangi kas sampai dilunasi.</p><div id="inL" class="rows"></div></section>
+
+<section data-tab="out" hidden><h2>Barang Keluar</h2><form data-form="out" class="card"><label>Produk<select name="sku" class="psel" required></select></label><label>Jumlah<input name="qty" type="number" min="1" step="1" required inputmode="numeric"></label><label class="full">Alasan<select name="reason"><option>Pemakaian servis</option><option>Barang rusak</option><option>Barang kedaluwarsa</option><option>Retur supplier</option></select></label><button class="btn full">Catat Barang Keluar</button></form>
+<p class="muted">Penjualan dicatat otomatis dari Kasir. Stok tidak boleh negatif.</p><h3>Riwayat pergerakan stok</h3><div id="mvL" class="rows"></div></section>
+
+<section data-tab="kas" hidden><h2>Kas Masuk &amp; Keluar</h2><div id="kasS" class="stats"></div><form data-form="cash" class="card" style="margin-top:12px"><label>Jenis<select name="type"><option value="in">Kas masuk</option><option value="out">Kas keluar</option></select></label><label>Kategori<select name="cat"><option>Pendapatan lainnya</option><option>Gaji / upah</option><option>Listrik</option><option>Air</option><option>Sewa</option><option>Peralatan</option><option>Operasional</option><option>Lainnya</option></select></label><label>Nominal (Rp)<input name="amount" type="number" min="1" required inputmode="numeric"></label><label>Metode<select name="method"><option>Tunai</option><option>Transfer</option><option>QRIS</option></select></label><label class="full">Keterangan<input name="desc" required></label><button class="btn full">Simpan</button></form><div id="kasL" class="rows" style="margin-top:12px"></div></section>
+
+<section data-tab="set" hidden><h2>Data</h2><div class="apptabs"><button class="btn sm ghost" id="bExp">Backup JSON</button><label class="btn sm ghost" style="cursor:pointer">Restore JSON<input id="bImp" type="file" accept=".json" hidden></label><button class="btn sm red" id="bDemo">Hapus antrean DEMO</button></div><h3>Data uji</h3><div class="apptabs"><button class="btn sm" id="dummyBtn">Buat data dummy</button><button class="btn sm ghost" id="simBtn">▶ Mulai simulasi live</button><button class="btn sm red" id="clrBtn">Hapus data dummy</button></div><p class="muted">Data dummy: 7 hari transaksi, kas, stok, antrean, dan booking contoh. Simulasi live menambah aktivitas tiap ±7 detik dan memunculkan notifikasi. Semua data dummy bisa dihapus tanpa menyentuh data nyata.</p><p class="muted">Backup berisi seluruh data termasuk akun demo. Simpan dengan aman.</p></section>
 </main><div id="toast" role="status"></div>
 <script src="core.js"></script>
 <script>
-const $b=$('#bk'),$w=$('#wo');
-function draw(){
-  const B=DB.read(K.bookings,[]).slice().reverse();
-  $b.innerHTML=B.map(b=>`<div class="row"><div><b>${esc(b.code)}</b> <span class="badge ${b.status==='Ditolak'?'b-bad':b.status==='Menunggu konfirmasi'?'b-warn':'b-ok'}">${esc(b.status)}</span></div>
-  <div class="muted">${esc(b.nama)} · ${esc(b.wa)} · ${esc(b.plat)} · ${esc(b.motor)}<br>${esc(b.layanan)} · ${esc(b.tgl)} ${esc(b.jam)}${b.catatan?'<br>“'+esc(b.catatan)+'”':''}</div>
-  <div class="acts">${b.status==='Menunggu konfirmasi'?`<button class="btn green" data-a="ok" data-id="${b.id}">Konfirmasi</button><button class="btn red" data-a="no" data-id="${b.id}">Tolak</button>`:''}
-  ${b.status==='Dikonfirmasi'?`<button class="btn" data-a="wo" data-id="${b.id}">Pelanggan datang → buat work order</button>`:''}</div></div>`).join('')||'<div class="empty">Belum ada booking. Booking dari halaman publik muncul di sini.</div>';
-  const W=DB.read(K.wo,[]).slice().reverse();
-  $w.innerHTML=W.map(w=>`<div class="row"><div><b>${esc(w.no)}</b> ${w.demo?'<span class="badge">DEMO</span>':''} <span class="badge ${stCls(w.status)}">${esc(w.status)}</span>${w.paid?' <span class="badge b-ok">Lunas</span>':''}</div>
-  <div class="muted">${esc(w.motor)}${w.plat?' · '+esc(w.plat):''} · ${esc(w.job)}${w.cust?' · '+esc(w.cust):''}</div>
-  <div class="acts"><select data-f="status" data-id="${w.id}" aria-label="Status">${STATUS.map(s=>`<option ${s===w.status?'selected':''}>${s}</option>`).join('')}</select>
-  <input data-f="mech" data-id="${w.id}" value="${esc(w.mech||'')}" placeholder="Mekanik" aria-label="Mekanik" style="max-width:160px"></div>
-  <div class="acts"><button class="btn ghost" data-a="note" data-id="${w.id}">Catatan pekerjaan</button>${w.demo||w.paid?'':`<a class="btn" href="kasir.html?wo=${w.id}">Lanjut ke Kasir</a>`}</div>
-  <ul class="hist">${(w.hist||[]).map(h=>`<li>${new Date(h.t).toLocaleString('id-ID')} — ${esc(h.s)}${h.n?': '+esc(h.n):''}</li>`).join('')||'<li>Belum ada riwayat</li>'}</ul></div>`).join('')||'<div class="empty">Belum ada work order.</div>';
-}
+const SES=guard(['admin']);
+const EMPTY=t=>`<div class="empty">${t}</div>`,fd=t=>new Date(t).toLocaleString('id-ID',{dateStyle:'short',timeStyle:'short'});
+const card=(l,v)=>`<div class="card"><div class="muted">${l}</div><div class="tot">${v}</div></div>`;
+function dRing(){const s=stats();$('#ring').innerHTML='<h2>Ringkasan</h2><div class="stats">'+card('Omzet hari ini',rp(s.omzetHari))+card('Transaksi hari ini',s.trxHari)+card('Saldo kas',rp(s.saldo))+card('Kas masuk',rp(s.kasIn))+card('Kas keluar',rp(s.kasOut))+card('Motor masuk hari ini',s.motorHari)+card('Antrean aktif',s.aktif)+card('Booking baru',s.bookingBaru)+card('Stok kritis',s.kritis.length)+card('Nilai persediaan',rp(s.nilai))+card('Utang supplier',rp(s.utang))+'</div><p class="muted">Antrean DEMO tidak dihitung. Omzet ≠ saldo kas. Nilai persediaan memakai harga beli; '+s.tanpaHPP+' produk belum punya harga beli (diisi lewat Barang Masuk).</p>'+(s.kritis.length?'<h3>Perlu restok</h3><div class="rows">'+s.kritis.map(p=>`<div class="row"><b>${esc(p.name)}</b><span class="muted">Stok ${p.stock} / min ${p.min}</span></div>`).join('')+'</div>':'')}
+function dAnt(){
+  $('#bk').innerHTML=DB.read(K.bookings,[]).slice().reverse().map(b=>`<div class="row"><div><b>${esc(b.code)}</b> <span class="badge ${b.status==='Ditolak'?'b-bad':b.status==='Menunggu konfirmasi'?'b-warn':'b-ok'}">${esc(b.status)}</span></div><div class="muted">${esc(b.nama)} · ${esc(b.wa)} · ${esc(b.plat)} · ${esc(b.motor)}<br>${esc(b.layanan)} · ${esc(b.tgl)} ${esc(b.jam)}${b.catatan?'<br>“'+esc(b.catatan)+'”':''}</div><div class="acts">${b.status==='Menunggu konfirmasi'?`<button class="btn green" data-a="ok" data-id="${b.id}">Konfirmasi</button><button class="btn red" data-a="no" data-id="${b.id}">Tolak</button>`:''}${b.status==='Dikonfirmasi'?`<button class="btn" data-a="wo" data-id="${b.id}">Pelanggan datang → buat work order</button>`:''}</div></div>`).join('')||EMPTY('Belum ada booking.');
+  $('#wo').innerHTML=DB.read(K.wo,[]).slice().reverse().map(w=>`<div class="row"><div><b>${esc(w.no)}</b> ${(w.demo||w.dummy)?'<span class="badge">DEMO</span>':''} <span class="badge ${stCls(w.status)}">${esc(w.status)}</span>${w.paid?' <span class="badge b-ok">Lunas</span>':''}</div><div class="muted">${esc(w.motor)}${w.plat?' · '+esc(w.plat):''} · ${esc(w.job)}${w.cust?' · '+esc(w.cust):''}</div><div class="acts"><select data-f="status" data-id="${w.id}" aria-label="Status">${STATUS.map(s=>`<option ${s===w.status?'selected':''}>${s}</option>`).join('')}</select><input data-f="mech" data-id="${w.id}" value="${esc(w.mech||'')}" placeholder="Mekanik" aria-label="Mekanik" style="max-width:160px"></div><div class="acts"><button class="btn ghost" data-a="note" data-id="${w.id}">Catatan pekerjaan</button>${w.demo||w.paid?'':`<a class="btn" href="kasir.html?wo=${w.id}">Lanjut ke Kasir</a>`}</div><ul class="hist">${(w.hist||[]).map(h=>`<li>${fd(h.t)} — ${esc(h.s)}${h.n?': '+esc(h.n):''}</li>`).join('')||'<li>Belum ada riwayat</li>'}</ul></div>`).join('')||EMPTY('Belum ada work order.')}
+function dStk(){const q=($('#sq').value||'').toLowerCase();$('#stkL').innerHTML=DB.read(K.products,[]).filter(p=>(p.name+p.sku).toLowerCase().includes(q)).map(p=>`<div class="row"><div><b>${esc(p.name)}</b> <span class="muted">${esc(p.sku)} · ${esc(p.cat)}</span></div><div>Stok <b>${p.stock}</b> (min ${p.min}) ${p.stock<=0?'<span class="badge b-bad">Habis</span>':p.stock<=p.min?'<span class="badge b-warn">Menipis</span>':'<span class="badge b-ok">Aman</span>'}</div><div class="muted">Jual ${rp(p.price)} · Beli ${p.cost!=null?rp(p.cost):'belum diisi'}</div><div class="acts"><button class="btn ghost" data-a="adj" data-id="${p.sku}">Stock opname / sesuaikan</button></div></div>`).join('')||EMPTY('Produk tidak ditemukan.')}
+function dIn(){$('#inL').innerHTML=DB.read(K.purch,[]).slice().reverse().map(b=>`<div class="row"><div><b>${esc(b.id)}</b> <span class="badge ${b.status==='Lunas'?'b-ok':'b-warn'}">${esc(b.status)}</span></div><div class="muted">${fd(b.t)} · ${esc(b.supplier)}${b.invoice?' · Faktur '+esc(b.invoice):''}<br>${esc(b.sku)} × ${b.qty} @ ${rp(b.cost)} = <b>${rp(b.total)}</b></div>${b.status==='Utang'?`<div class="acts"><button class="btn green" data-a="lunas" data-id="${b.id}">Lunasi (${rp(b.total-b.paid)})</button></div>`:''}</div>`).join('')||EMPTY('Belum ada pembelian.')}
+function dOut(){$('#mvL').innerHTML=DB.read(K.moves,[]).slice().reverse().slice(0,40).map(m=>`<div class="row"><div><b>${esc(m.sku)}</b> <span class="${m.qty<0?'neg':'pos'}">${m.qty>0?'+':''}${m.qty}</span> <span class="badge">${esc(m.reason)}</span></div><div class="muted">${fd(m.t)} · ${esc(m.u)}${m.ref&&m.ref!=='manual'?' · ref '+esc(m.ref):''}</div></div>`).join('')||EMPTY('Belum ada pergerakan stok.')}
+function dKas(){const s=stats();$('#kasS').innerHTML=card('Kas masuk',rp(s.kasIn))+card('Kas keluar',rp(s.kasOut))+card('Saldo kas',rp(s.saldo));
+  $('#kasL').innerHTML=DB.read(K.cashb,[]).slice().reverse().slice(0,50).map(c=>`<div class="row"><div><span class="badge ${c.type==='in'?'b-ok':'b-bad'}">${c.type==='in'?'Masuk':'Keluar'}</span> <b class="${c.type==='in'?'pos':'neg'}">${rp(c.amount)}</b> <span class="muted">${esc(c.cat)} · ${esc(c.method)}</span></div><div class="muted">${fd(c.t)} · ${esc(c.desc)} · ${esc(c.u)}</div></div>`).join('')||EMPTY('Belum ada catatan kas.')}
+function fill(){document.querySelectorAll('.psel').forEach(s=>{const v=s.value;s.innerHTML=DB.read(K.products,[]).map(p=>`<option value="${esc(p.sku)}">${esc(p.name)} (${esc(p.sku)}) · stok ${p.stock}</option>`).join('');if(v)s.value=v})}
+function drawAll(){dRing();dAnt();dStk();dIn();dOut();dKas();fill()}
+$('#tabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll('#tabs .btn').forEach(b=>b.classList.toggle('on',b===e.target));document.querySelectorAll('[data-tab]').forEach(s=>s.hidden=s.dataset.tab!==t)};
 document.addEventListener('click',e=>{const a=e.target.dataset.a,id=e.target.dataset.id;if(!a)return;
   if(a==='ok'){setBooking(id,'Dikonfirmasi');toast('Booking dikonfirmasi')}
-  if(a==='no'){if(!confirm('Tolak booking ini?'))return;setBooking(id,'Ditolak');toast('Booking ditolak')}
+  if(a==='no'){if(!confirm('Tolak booking ini?'))return;setBooking(id,'Ditolak')}
   if(a==='wo'){const w=bookingToWO(id);toast(w?'Work order '+w.no+' dibuat':'Gagal membuat work order')}
   if(a==='note'){const n=prompt('Catatan pekerjaan / hasil pemeriksaan:');if(n&&n.trim())setWO(id,{},n.trim())}
-  draw()});
+  if(a==='lunas'){const r=payDebt(id);toast(r.ok?'Utang lunas, kas keluar dicatat':r.msg)}
+  if(a==='adj'){const p=DB.read(K.products,[]).find(x=>x.sku===id),v=prompt('Stok fisik hasil hitung untuk '+p.name+' (sistem: '+p.stock+'):');if(v===null)return;const n=parseInt(v);if(!(n>=0)){toast('Angka tidak valid');return}
+    const why=prompt('Alasan penyesuaian:');if(!why||why.trim().length<3){toast('Alasan wajib diisi');return}if(n!==p.stock){const r=changeStock(id,n-p.stock,'Penyesuaian: '+why.trim(),'opname');toast(r.ok?'Stok disesuaikan':r.msg)}}
+  drawAll()});
 document.addEventListener('change',e=>{const f=e.target.dataset.f,id=e.target.dataset.id;if(!f)return;
-  if(f==='status')setWO(id,{status:e.target.value},'Diubah oleh admin');
-  if(f==='mech')setWO(id,{mech:e.target.value.trim()},'Mekanik: '+e.target.value.trim());
-  toast('Tersimpan');draw()});
-$('#bDemo').onclick=()=>{if(confirm('Hapus semua antrean DEMO? Work order nyata tidak terpengaruh.')){DB.write(K.wo,DB.read(K.wo,[]).filter(w=>!w.demo));log('Data demo dihapus');draw()}};
+  if(f==='status')setWO(id,{status:e.target.value},'Diubah oleh '+U());
+  if(f==='mech')setWO(id,{mech:e.target.value.trim()},'Mekanik: '+e.target.value.trim());toast('Tersimpan');drawAll()});
+document.addEventListener('submit',e=>{e.preventDefault();const f=e.target.dataset.form,d=Object.fromEntries(new FormData(e.target));let r;
+  if(f==='prod')r=newProduct({sku:d.sku.trim().toUpperCase(),name:d.name.trim(),cat:d.cat.trim()||'Lainnya',price:+d.price,min:+d.min||0});
+  if(f==='in')r=addPurchase({sku:d.sku,supplier:d.supplier.trim()||'-',invoice:d.invoice.trim(),qty:+d.qty,cost:+d.cost,status:d.status,method:d.method});
+  if(f==='out')r=stockOut(d.sku,+d.qty,d.reason);
+  if(f==='cash')r=manualCash(d.type,d.cat,d.desc,+d.amount,d.method);
+  toast(r.ok?'Tersimpan':r.msg);if(r.ok)e.target.reset();drawAll()});
+$('#sq').oninput=dStk;
+$('#bDemo').onclick=()=>{if(confirm('Hapus semua antrean DEMO? Work order nyata tidak terpengaruh.')){DB.write(K.wo,DB.read(K.wo,[]).filter(w=>!w.demo));log('Data demo dihapus');drawAll()}};
 $('#bExp').onclick=()=>download('motocare-backup-'+today()+'.json',exportAll(),'application/json');
-$('#bImp').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{if(!confirm('Timpa data saat ini dengan backup ini?'))return;importAll(r.result);toast('Restore berhasil');draw()}catch(x){toast('Gagal: '+x.message)}};r.readAsText(f)};
+$('#bImp').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{if(!confirm('Timpa data saat ini dengan backup ini?'))return;importAll(r.result);toast('Restore berhasil');drawAll()}catch(x){toast('Gagal: '+x.message)}};r.readAsText(f)};
 $('#themeBtn').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;DB.write(K.theme,t)};
-document.documentElement.dataset.theme=DB.read(K.theme,'dark');draw();
+window.addEventListener('storage',drawAll);window.addEventListener('mc-data',()=>{const a=document.activeElement;if(a&&a.closest&&a.closest('#wo,form'))return;drawAll()});
+document.documentElement.dataset.theme=DB.read(K.theme,'dark');drawAll();
 </script></body></html>

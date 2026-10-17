@@ -1,9 +1,12 @@
+const SVG={wrench:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8 6.2 21l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',tire:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>',bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',box:'<path d="M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/>'};
+const IM={S1:'drop',S2:'gear',S3:'tire',S5:'bolt',S6:'tire',S7:'bolt',S8:'gear'};
+const icon=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${SVG[IM[k]||k]||SVG.wrench}</svg>`;
 /* ===== Tampilan ===== */
 function waLink(text){return 'https://wa.me/'+S().wa+'?text='+encodeURIComponent(text)}
 function renderBase(){
   const s=S();
   document.querySelectorAll('[data-s]').forEach(e=>e.textContent=s[e.dataset.s]||'');
-  $('#waTop').href=waLink('Halo '+s.name+', saya ingin bertanya.');
+  $('#waTop').href=$('#waHero').href=waLink('Halo '+s.name+', saya ingin bertanya.');
   $('#mapBtn').href=s.maps;
 }
 function renderPromos(){
@@ -17,17 +20,23 @@ function renderPromos(){
 }
 function renderServices(){
   const sv=DB.read(K.services,[]);
-  $('#svcGrid').innerHTML=sv.map(x=>`<article class="item"><div class="ico">${x.ico}</div><h3>${esc(x.name)}</h3><p class="muted">${esc(x.desc)}</p><p class="muted">Estimasi ${esc(x.dur)}</p><div class="price">mulai ${rp(x.fee)}</div><p class="muted">Biaya jasa, belum termasuk spare part.</p></article>`).join('');
+  $('#svcGrid').innerHTML=sv.map(x=>`<article class="item"><div class="ico">${icon(x.id)}</div><h3>${esc(x.name)}</h3><p class="muted">${esc(x.desc)}</p><p class="muted">Estimasi ${esc(x.dur)}</p><div class="price">mulai ${rp(x.fee)}</div><p class="muted">Biaya jasa, belum termasuk spare part.</p></article>`).join('');
   $('#bkSvc').innerHTML=sv.map(x=>`<option>${esc(x.name)}</option>`).join('');
 }
+let pSel=null;
+const mobile=()=>matchMedia('(max-width:860px)').matches;
 function renderProducts(){
-  const P=DB.read(K.products,[]),cats=['Semua',...new Set(P.map(p=>p.cat))];
-  const sel=$('#pCat');if(!sel.options.length)sel.innerHTML=cats.map(c=>`<option>${esc(c)}</option>`).join('');
-  const q=$('#pSearch').value.toLowerCase(),c=sel.value||'Semua';
-  const list=P.filter(p=>(c==='Semua'||p.cat===c)&&(p.name+p.sku).toLowerCase().includes(q));
+  const P=DB.read(K.products,[]),cats=[...new Set(P.map(p=>p.cat))],sel=$('#pCat');
+  if(!sel.options.length)sel.innerHTML='<option>Semua</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join('');
+  const q=$('#pSearch').value.toLowerCase().trim(),m=mobile(),hide=m&&!q&&pSel===null;
+  $('#pChips').innerHTML=['Semua Produk',...cats].map(x=>`<button class="chip ${pSel===x?'on':''}" data-c="${esc(x)}">${esc(x)}</button>`).join('');
+  $('#pHint').hidden=!hide;
+  if(hide){$('#prodGrid').innerHTML='';return}
+  const c=m?(pSel||'Semua Produk'):sel.value,all=c==='Semua'||c==='Semua Produk';
+  const list=P.filter(p=>(all||p.cat===c)&&(p.name+p.sku).toLowerCase().includes(q));
   $('#prodGrid').innerHTML=list.map(p=>{
     const b=p.stock<=0?'<span class="badge b-bad">Stok habis</span>':p.stock<=p.min?`<span class="badge b-warn">Stok menipis: ${p.stock}</span>`:`<span class="badge b-ok">Stok: ${p.stock}</span>`;
-    return `<article class="item"><div class="ico">📦</div><h3>${esc(p.name)}</h3><p class="muted">SKU ${esc(p.sku)} · ${esc(p.cat)}</p><div class="price">${rp(p.price)}</div>${b}
+    return `<article class="item"><div class="ico">${icon('box')}</div><h3>${esc(p.name)}</h3><p class="muted">SKU ${esc(p.sku)} · ${esc(p.cat)}</p><div class="price">${rp(p.price)}</div>${b}
     <a class="btn ghost" target="_blank" rel="noopener" href="${waLink('Halo, saya tanya produk '+p.name+' ('+p.sku+')')}">Tanya via WhatsApp</a></article>`}).join('')||'<div class="empty">Produk tidak ditemukan.</div>';
 }
 let qFilter='Semua';
@@ -36,7 +45,7 @@ function renderQueue(){
   $('#qChips').innerHTML=chips.map(c=>`<button class="chip ${c===qFilter?'on':''}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
   const q=$('#qSearch').value.trim().toLowerCase();
   const l=DB.read(K.wo,[]).filter(w=>(qFilter==='Semua'||w.status===qFilter)&&w.no.toLowerCase().includes(q));
-  $('#qList').innerHTML=l.map(w=>`<div class="q"><div class="no">${esc(w.no)}${w.demo?'<br><span class="badge">DEMO</span>':''}</div><div><b>${esc(w.motor)}</b><div class="muted">${esc(w.job)}</div></div>
+  $('#qList').innerHTML=l.map(w=>`<div class="q"><div class="no">${esc(w.no)}${(w.demo||w.dummy)?'<br><span class="badge">DEMO</span>':''}</div><div><b>${esc(w.motor)}</b><div class="muted">${esc(w.job)}</div></div>
   <div class="st"><span class="badge ${stCls(w.status)}">${esc(w.status)}</span> <span class="muted">Mekanik ${esc(w.mech||'-')} · Est. ${esc(w.eta||'-')}</span></div></div>`).join('')||'<div class="empty">Belum ada antrean untuk filter ini.</div>';
 }
 /* ===== Booking ===== */
@@ -71,3 +80,13 @@ $('#pSearch').oninput=renderProducts;$('#pCat').onchange=renderProducts;$('#qSea
 $('#qChips').onclick=e=>{const c=e.target.dataset.c;if(c){qFilter=c;renderQueue()}};
 $('#bkForm').onsubmit=submitBooking;$('#chkForm').onsubmit=checkBooking;
 window.addEventListener('storage',()=>{renderProducts();renderQueue();renderPromos()});
+
+const mb=$('#menuBtn'),nv=$('#nav'),closeMenu=()=>{nv.classList.remove('open');mb.setAttribute('aria-expanded','false')};
+mb.onclick=()=>mb.setAttribute('aria-expanded',nv.classList.toggle('open'));
+nv.onclick=e=>{if(e.target.tagName==='A')closeMenu()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
+
+$('#pChips').onclick=e=>{const c=e.target.dataset.c;if(c){pSel=pSel===c?null:c;renderProducts()}};
+matchMedia('(max-width:860px)').onchange=renderProducts;
+$('#splash').onclick=e=>e.currentTarget.remove();
+setTimeout(()=>{const x=$('#splash');x&&x.remove()},3400);

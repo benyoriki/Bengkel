@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Kasir — MOTOCARE MOTOR</title><link rel="stylesheet" href="style.css"></head><body>
-<header class="top"><a class="logo" href="index.html"><span class="mark">M</span><span><b>MOTOCARE MOTOR</b><small>Kasir</small></span></a><nav id="nav"><a href="index.html">Beranda</a><a href="admin.html">Admin</a><a href="kasir.html">Kasir</a></nav><div class="tools"><button id="themeBtn" class="icon" aria-label="Ganti tema">◐</button></div></header>
-<main class="app"><div class="warn">Mode prototype tanpa login. QRIS dan transfer hanya dicatat manual, tidak diverifikasi otomatis.</div>
+<header class="top"><a class="logo" href="index.html"><span class="mark">M</span><span><b>MOTOCARE MOTOR</b><small>Kasir</small></span></a><nav id="nav"><a href="index.html">Beranda</a><a href="admin.html">Admin</a><a href="kasir.html">Kasir</a><a href="#" onclick="logout();return false">Keluar</a></nav><div class="tools"><button id="themeBtn" class="icon" aria-label="Ganti tema">◐</button></div></header>
+<main class="app"><div class="apptabs"><a id="back" class="btn sm ghost" href="index.html">← Kembali</a><button class="btn sm ghost" onclick="logout()">Keluar</button></div><div class="warn">Mode prototype tanpa login. QRIS dan transfer hanya dicatat manual, tidak diverifikasi otomatis.</div>
 <div class="kgrid"><section class="card"><h2>Tagihan Baru</h2>
 <label>Work order<select id="woSel"></select></label>
 <div class="bar" style="margin-top:12px"><select id="svcSel" aria-label="Jasa"></select><button class="btn sm" id="addSvc">+ Jasa</button></div>
@@ -15,6 +15,7 @@
 <div id="receipt"></div><div id="toast" role="status"></div>
 <script src="core.js"></script>
 <script>
+const SES=guard(['admin','kasir']);
 let items=[];
 const qs=new URLSearchParams(location.search);
 function fillSel(){
@@ -50,4 +51,5 @@ $('#txs').onclick=e=>{const d=e.target.dataset;
   if(d.c){const r=prompt('Alasan pembatalan (stok dikembalikan, refund dicatat):');if(r===null)return;const x=cancelTx(d.c,r);toast(x.ok?'Transaksi dibatalkan':x.msg);fillSel();hist()}};
 $('#themeBtn').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;DB.write(K.theme,t)};
 document.documentElement.dataset.theme=DB.read(K.theme,'dark');fillSel();calc();hist();
+window.addEventListener('mc-data',()=>{hist();if(!items.length&&document.activeElement!==$('#woSel'))fillSel()});
 </script></body></html>
