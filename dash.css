@@ -47,12 +47,22 @@ body.dash{--bg:#07090e;--bg2:#0e1219;--card:#121722;--line:#1e2633;--tx:#eef1f6;
  .dtop .logo small,.dtop .chip{display:none}
  .modal{align-items:flex-end;padding:0}.mbox{border-radius:20px 20px 0 0;margin:0;max-height:92vh;overflow-y:auto}
  #tb .tw{border:0;background:transparent;overflow:visible}
- #tb table:not(.rep),#tb table:not(.rep) tbody,#tb table:not(.rep) tr,#tb table:not(.rep) td{display:block}#tb table:not(.rep) thead{display:none}
- #tb table:not(.rep) tbody tr{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 14px;margin-bottom:10px}
- #tb table:not(.rep) td{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border:0;border-bottom:1px dashed var(--line);text-align:right;white-space:normal}
- #tb table:not(.rep) td:before{content:attr(data-label);color:var(--mut);font-size:.78rem;text-align:left;flex:none}
- #tb table:not(.rep) td:last-child{border:0;justify-content:flex-end;flex-wrap:wrap}#tb td[data-label="Aksi"]:before,#tb td[data-label=""]:before,#tb td[data-label="Faktur"]:before{display:none}
+ #tb table:not(.rep):not(.xl),#tb table:not(.rep):not(.xl) tbody,#tb table:not(.rep):not(.xl) tr,#tb table:not(.rep):not(.xl) td{display:block}#tb table:not(.rep):not(.xl) thead{display:none}
+ #tb table:not(.rep):not(.xl) tbody tr{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 14px;margin-bottom:10px}
+ #tb table:not(.rep):not(.xl) td{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border:0;border-bottom:1px dashed var(--line);text-align:right;white-space:normal}
+ #tb table:not(.rep):not(.xl) td:before{content:attr(data-label);color:var(--mut);font-size:.78rem;text-align:left;flex:none}
+ #tb table:not(.rep):not(.xl) td:last-child{border:0;justify-content:flex-end;flex-wrap:wrap}#tb td[data-label="Aksi"]:before,#tb td[data-label=""]:before,#tb td[data-label="Faktur"]:before{display:none}
  #tb td.empty{display:block;text-align:center}
  #tb tfoot{display:block}#tb tfoot tr{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;background:var(--card);border:1px solid var(--acc);border-radius:14px;padding:10px 14px;margin-bottom:10px}#tb tfoot th,#tb tfoot td{display:block;border:0;padding:0;background:transparent}
  .fk .tw{overflow-x:auto}
 }
+
+/* Tabel gaya Excel (owner): kolom memanjang ke samping, bisa digeser di HP */
+.dash .tw:has(table.xl){overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line)}
+table.xl{border-collapse:collapse;width:100%;min-width:max-content}
+table.xl th,table.xl td{border:1px solid var(--line);padding:9px 14px;white-space:nowrap;text-align:left}
+table.xl thead th{background:var(--bg2);position:sticky;top:0}
+table.xl tfoot th{background:var(--bg2);border-top:2px solid var(--acc)}
+table.xl td:before{content:none!important}
+@media(max-width:700px){#tb .tw:has(table.xl){border:1px solid var(--line);background:var(--card);overflow-x:auto}#tb table.xl{display:table}#tb table.xl thead{display:table-header-group}#tb table.xl tbody{display:table-row-group}#tb table.xl tfoot{display:table-footer-group}#tb table.xl tr{display:table-row;background:none;border:0;padding:0;margin:0}#tb table.xl td,#tb table.xl th{display:table-cell;padding:9px 14px}}
+.dash .fk th{background:#f0f0ee;color:#111}.dash .fk tfoot th,.dash .fk tfoot td{background:#f6f6f4;color:#111}.dash .fk .tw{background:#fff}
