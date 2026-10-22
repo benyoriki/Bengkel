@@ -1,12 +1,12 @@
 const SVG={wrench:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8 6.2 21l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',tire:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>',bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',box:'<path d="M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/>'};
 const IM={S1:'drop',S2:'gear',S3:'tire',S5:'bolt',S6:'tire',S7:'bolt',S8:'gear'};
-const icon=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${SVG[IM[k]||k]||SVG.wrench}</svg>`;
+const icon=k=>'<img class="ico-img" src="logo-sm.png" alt="" width="56" height="56" loading="lazy" decoding="async">';
 /* ===== Tampilan ===== */
 function waLink(text){return 'https://wa.me/'+S().wa+'?text='+encodeURIComponent(text)}
 function renderBase(){
   const s=S();
   document.querySelectorAll('[data-s]').forEach(e=>e.textContent=s[e.dataset.s]||'');
-  $('#waTop').href=$('#waHero').href=waLink('Halo '+s.name+', saya ingin bertanya.');
+  $('#waTop').href=$('#waHero').href=$('#waFloat').href=waLink('Halo '+s.name+', saya ingin bertanya.');
   $('#mapBtn').href=s.maps;
 }
 function renderPromos(){
