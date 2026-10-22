@@ -88,5 +88,16 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 
 $('#pChips').onclick=e=>{const c=e.target.dataset.c;if(c){pSel=pSel===c?null:c;renderProducts()}};
 matchMedia('(max-width:860px)').onchange=renderProducts;
-$('#splash').onclick=e=>e.currentTarget.remove();
-{const x=$('#splash');if(x&&!document.documentElement.classList.contains('sp'))x.remove();else setTimeout(()=>{const y=$('#splash');y&&y.remove()},1500)}
+/* Loading screen: tampil 3 detik setiap buka / muat ulang */
+setTimeout(()=>{const y=$('#splash');y&&y.remove()},3500);
+/* Tombol pasang PWA */
+let dp=null;const pw=document.querySelectorAll('.pwa'),inApp=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+pw.forEach(b=>b.hidden=inApp());
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e});
+addEventListener('appinstalled',()=>{dp=null;pw.forEach(b=>b.hidden=true);toast('Aplikasi berhasil dipasang')});
+pw.forEach(b=>b.onclick=()=>{
+  if(dp){dp.prompt();dp.userChoice.then(()=>{dp=null});return}
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  $('#pwaT').innerHTML=ios?'Ketuk ikon <b>Bagikan</b> di Safari, lalu pilih <b>Tambah ke Layar Utama</b>.':'Buka menu browser (titik tiga ⋮), lalu pilih <b>Instal aplikasi</b> atau <b>Tambahkan ke layar utama</b>. Jika menu tidak ada, buka website ini lewat Chrome atau Edge.';
+  $('#pwaM').hidden=false});
+$('#pwaX').onclick=()=>$('#pwaM').hidden=true;$('#pwaM').onclick=e=>{if(e.target.id==='pwaM')e.target.hidden=true};
