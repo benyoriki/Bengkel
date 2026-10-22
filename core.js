@@ -1,10 +1,13 @@
 'use strict';
 /* ===== Lapisan data (localStorage; mudah diganti Firebase) ===== */
-const K={users:'motocare_users',purch:'motocare_purchases',logs:'motocare_activity_logs',tx:'motocare_transactions',moves:'motocare_stock_movements',cashb:'motocare_cash_entries',settings:'motocare_settings',services:'motocare_services',products:'motocare_products',promos:'motocare_promos',bookings:'motocare_bookings',wo:'motocare_work_orders',ver:'motocare_schema_version',theme:'motocare_theme'};
-const SCHEMA=3;
+const K={users:'motocare_users',purch:'motocare_purchases',logs:'motocare_activity_logs',tx:'motocare_transactions',moves:'motocare_stock_movements',cashb:'motocare_cash_entries',settings:'motocare_settings',services:'motocare_services',products:'motocare_products',promos:'motocare_promos',bookings:'motocare_bookings',wo:'motocare_work_orders',cust:'motocare_customers',inv:'motocare_invoices',ver:'motocare_schema_version',theme:'motocare_theme'};
+const SCHEMA=4;
 const DB={
-  read(k,def){try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){console.warn('Data rusak:',k);return def}},
-  write(k,v){try{localStorage.setItem(k,JSON.stringify(v));if(typeof window!=='undefined'){clearTimeout(DB._t);DB._t=setTimeout(()=>window.dispatchEvent(new Event('mc-data')),120)}return true}catch(e){toast('Penyimpanan penuh atau diblokir. Ekspor data lalu kosongkan.');return false}}
+  read(k,def){if(DB._m){if(!(k in DB._m)){try{const v=localStorage.getItem(k);DB._m[k]=v?JSON.parse(v):def}catch(e){DB._m[k]=def}}return DB._m[k]}
+    try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){console.warn('Data rusak:',k);return def}},
+  write(k,v){if(DB._m){DB._m[k]=v;return true}
+    try{localStorage.setItem(k,JSON.stringify(v));if(typeof window!=='undefined'){clearTimeout(DB._t);DB._t=setTimeout(()=>window.dispatchEvent(new Event('mc-data')),120)}return true}catch(e){toast('Penyimpanan penuh atau diblokir. Ekspor data lalu kosongkan.');return false}},
+  flush(){const m=DB._m;DB._m=null;if(m)for(const k in m)DB.write(k,m[k])}
 };
 const rp=n=>'Rp '+Number(n||0).toLocaleString('id-ID');
 const $=s=>document.querySelector(s);
@@ -14,7 +17,9 @@ const today=()=>{const d=_clock?new Date(_clock):new Date();return d.getFullYear
 function toast(m){const t=$('#toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2800)}
 
 function seed(){
-  const v0=DB.read(K.ver,0);if(v0>=SCHEMA)return;if(v0===1){DB.write(K.wo,DB.read(K.wo,[]).map(w=>({demo:true,hist:[],...w})));DB.write(K.users,USERS);DB.write(K.ver,SCHEMA);return}if(v0===2){DB.write(K.users,USERS);DB.write(K.ver,SCHEMA);return}
+  const v0=DB.read(K.ver,0);if(v0>=SCHEMA)return;
+  if(v0>=1){if(v0===1)DB.write(K.wo,DB.read(K.wo,[]).map(w=>({demo:true,hist:[],...w})));DB.write(K.users,USERS);
+    DB.write(K.cashb,DB.read(K.cashb,[]).filter(c=>!['Penjualan/servis','Refund'].includes(c.cat)));DB.write(K.cust,DB.read(K.cust,[]));DB.write(K.inv,DB.read(K.inv,[]));DB.write(K.ver,SCHEMA);return}
   DB.write(K.settings,{name:'MOTOCARE MOTOR',wa:'6281234567890',address:'Jl. Contoh Raya No. 12, Kota Anda',hours:'Senin–Sabtu 08.00–17.00 · Minggu tutup',maps:'https://maps.google.com/?q=bengkel+motor'});
   DB.write(K.services,[
     {id:'S1',ico:'🛢️',name:'Ganti oli mesin',desc:'Oli baru, cek kebocoran.',dur:'20 mnt',fee:20000},
@@ -38,7 +43,7 @@ function seed(){
     {id:'P2',name:'Diskon Servis Ringan',normal:160000,promo:120000,from:'2026-10-01',to:'2026-10-31',tnc:'Cek mesin, rem, kelistrikan, CVT.'},
     {id:'P3',name:'Paket Servis Lengkap',normal:315000,promo:250000,from:'2026-10-01',to:'2026-10-31',tnc:'Tune-up + ganti oli + cek injeksi.'},
     {id:'P4',name:'Promo Ganti Ban',normal:235000,promo:200000,from:'2026-10-01',to:'2026-10-31',tnc:'Ban luar berkualitas + gratis pasang.'}]);
-  DB.write(K.bookings,[]);DB.write(K.users,USERS);
+  DB.write(K.bookings,[]);DB.write(K.users,USERS);DB.write(K.cust,[]);DB.write(K.inv,[]);
   DB.write(K.wo,[
     {id:'WO1',no:'A-001',motor:'Honda Beat',job:'Ganti oli mesin',mech:'Andi',status:'Sedang dikerjakan',date:today(),demo:true,hist:[],eta:'11:30'},
     {id:'WO2',no:'A-002',motor:'Yamaha NMAX',job:'Servis CVT',mech:'Budi',status:'Menunggu',date:today(),demo:true,hist:[],eta:'13:00'},
@@ -57,7 +62,7 @@ const sess=()=>{try{return JSON.parse(sessionStorage.getItem('motocare_session')
 const U=()=>{if(_dummy)return 'Kasir Demo';const s=sess();return s?s.name:'Staf'},stamp=()=>(_clock?new Date(_clock):new Date()).toISOString();
 const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 function log(a){const L=DB.read(K.logs,[]);L.push({t:stamp(),u:U(),a,..._d()});DB.write(K.logs,L.slice(-500))}
-function cash(type,cat,desc,amount,method,ref){const C=DB.read(K.cashb,[]);C.push({id:uid('KS'),t:stamp(),type,cat,desc,amount,method,ref,u:U(),..._d()});DB.write(K.cashb,C)}
+function cash(type,cat,desc,amount,method,ref,at){const C=DB.read(K.cashb,[]);C.push({id:uid('KS'),t:at||stamp(),type,cat,desc,amount,method,ref,u:U(),..._d()});DB.write(K.cashb,C)}
 function setBooking(id,status){const B=DB.read(K.bookings,[]),b=B.find(x=>x.id===id);if(!b)return null;b.status=status;DB.write(K.bookings,B);log('Booking '+b.code+' → '+status);return b}
 function bookingToWO(id){
   const B=DB.read(K.bookings,[]),b=B.find(x=>x.id===id);
@@ -74,38 +79,59 @@ function changeStock(sku,d,reason,ref){
   if(p.stock+d<0)return{ok:false,msg:'Stok '+p.name+' tidak cukup'};
   p.stock+=d;DB.write(K.products,P);
   const M=DB.read(K.moves,[]);M.push({id:uid('MV'),t:stamp(),sku,qty:d,reason,ref,u:U(),..._d()});DB.write(K.moves,M);return{ok:true}}
-function payInvoice(woId,items,disc,method,paid){
-  const T=DB.read(K.tx,[]);
-  if(woId&&T.some(t=>t.woId===woId&&t.status==='Lunas'))return{ok:false,msg:'Work order ini sudah dibayar.'};
-  if(!items.length)return{ok:false,msg:'Tagihan masih kosong.'};
-  const sub=items.reduce((a,i)=>a+i.qty*i.price,0);
-  if(disc<0||disc>sub)return{ok:false,msg:'Diskon tidak valid.'};
-  const total=sub-disc;if(paid<total)return{ok:false,msg:'Nominal bayar kurang dari total.'};
-  const P=DB.read(K.products,[]);
-  for(const i of items.filter(i=>i.sku)){const p=P.find(x=>x.sku===i.sku);if(!p||p.stock<i.qty)return{ok:false,msg:'Stok '+i.name+' tidak cukup.'}}
-  const id='TRX-'+today().replace(/-/g,'')+'-'+String(T.length+1).padStart(4,'0');
-  items.filter(i=>i.sku).forEach(i=>changeStock(i.sku,-i.qty,'Penjualan',id));
-  const tx={id,woId,items,sub,disc,total,paid,change:paid-total,method,status:'Lunas',t:stamp(),cashier:U(),..._d()};
-  T.push(tx);DB.write(K.tx,T);cash('in','Penjualan/servis','Pembayaran '+id,total,method,id);
-  if(woId)setWO(woId,{paid:true,status:'Siap diambil'},'Dibayar '+id);
-  log('Transaksi '+id+' lunas');notify('Transaksi lunas',id+' · '+rp(total)+' · '+method+(_dummy?' (dummy)':''));return{ok:true,tx}}
-function cancelTx(id,reason){
-  if(!reason||reason.trim().length<3)return{ok:false,msg:'Alasan wajib diisi.'};
-  const T=DB.read(K.tx,[]),t=T.find(x=>x.id===id);
-  if(!t||t.status!=='Lunas')return{ok:false,msg:'Transaksi tidak dapat dibatalkan.'};
-  t.items.filter(i=>i.sku).forEach(i=>changeStock(i.sku,i.qty,'Pembatalan',id));
-  t.status='Dibatalkan';t.reason=reason;t.cancelT=stamp();DB.write(K.tx,T);
-  cash('out','Refund','Pembatalan '+id+': '+reason,t.total,t.method,id);
-  if(t.woId)setWO(t.woId,{paid:false},'Transaksi '+id+' dibatalkan');
-  log('Transaksi '+id+' dibatalkan');notify('Transaksi dibatalkan',id+' · '+rp(t.total),'bad');return{ok:true}}
+/* ===== Pelanggan, Faktur Service (WO), laporan harian ===== */
+const dOf=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const addDays=n=>{const d=_clock?new Date(_clock):new Date();d.setDate(d.getDate()+n);return dOf(d)};
+const normPlat=s=>String(s||'').toUpperCase().replace(/\s+/g,'');
+const sumBy=(a,f)=>a.reduce((x,i)=>x+f(i),0);
+const invT=i=>{const it=i.items||[],jasa=sumBy(it.filter(x=>x.type!=='part'),x=>x.qty*x.price),pt=it.filter(x=>x.type==='part'),part=sumBy(pt,x=>x.qty*x.price);return{jasa,part,sub:jasa+part,total:jasa+part-(i.disc||0),hpp:sumBy(pt,x=>x.qty*(x.cost||0))}};
+function saveCustomer(c,id){const n=(c.name||'').trim(),pl=(c.plat||'').trim().toUpperCase();if(!n||!pl)return{ok:false,msg:'Nama dan No. Polisi wajib diisi.'};
+  const C=DB.read(K.cust,[]);if(C.some(x=>x.id!==id&&normPlat(x.plat)===normPlat(pl)))return{ok:false,msg:'No. Polisi sudah terdaftar.'};
+  const o={name:n,motor:(c.motor||'').trim(),plat:pl,hp:(c.hp||'').trim(),addr:(c.addr||'').trim()};
+  if(id)Object.assign(C.find(x=>x.id===id),o);else C.push({id:uid('C'),...o,created:stamp(),..._d()});
+  DB.write(K.cust,C);log('Pelanggan '+(id?'diubah ':'baru ')+pl);return{ok:true}}
+function delCustomer(id){if(DB.read(K.inv,[]).some(i=>i.custId===id))return{ok:false,msg:'Pelanggan sudah punya faktur, tidak bisa dihapus.'};DB.write(K.cust,DB.read(K.cust,[]).filter(c=>c.id!==id));return{ok:true}}
+function createInvoice(custId,extra){const c=DB.read(K.cust,[]).find(x=>x.id===custId);if(!c)return{ok:false,msg:'Pelanggan tidak ditemukan.'};
+  const I=DB.read(K.inv,[]),d=today(),pre='FS-'+d.replace(/-/g,'')+'-';let n=I.filter(i=>i.no.startsWith(pre)).length+1;while(I.some(i=>i.no===pre+String(n).padStart(3,'0')))n++;
+  const inv={id:uid('FK'),no:pre+String(n).padStart(3,'0'),date:d,t:stamp(),custId:c.id,name:c.name,motor:c.motor,plat:c.plat,hp:c.hp,addr:c.addr,km:'',mech:'',note:'',items:[],disc:0,ret:false,status:'Draft',u:U(),...(extra||{}),..._d()};
+  I.push(inv);DB.write(K.inv,I);log('Faktur '+inv.no+' dibuat');return{ok:true,inv}}
+function saveInvoice(id,p){const I=DB.read(K.inv,[]),i=I.find(x=>x.id===id);if(!i||i.status!=='Draft')return{ok:false,msg:'Faktur sudah ditutup, tidak bisa diubah.'};
+  if(p.items){const it=[];for(const x of p.items){const q=Math.floor(+x.qty),pr=+x.price,nm=String(x.name||'').trim();if(!nm||!(q>=1)||!(pr>=0))return{ok:false,msg:'Item "'+(nm||'?')+'" tidak valid (nama, jumlah ≥ 1, harga ≥ 0).'};it.push({type:x.type==='part'?'part':'jasa',sku:x.sku||null,name:nm,qty:q,price:pr})}p={...p,items:it}}
+  const nx={...i,...p},sub=invT(nx).sub;if(nx.disc<0||nx.disc>sub)return{ok:false,msg:'Diskon tidak valid.'};
+  Object.assign(i,{km:nx.km,mech:nx.mech,note:nx.note,items:nx.items,disc:+nx.disc||0,ret:!!nx.ret});DB.write(K.inv,I);return{ok:true}}
+function closeInvoice(id){const I=DB.read(K.inv,[]),i=I.find(x=>x.id===id);if(!i||i.status!=='Draft')return{ok:false,msg:'Faktur sudah ditutup.'};if(!i.items.length)return{ok:false,msg:'Faktur masih kosong.'};
+  const P=DB.read(K.products,[]);for(const x of i.items.filter(x=>x.sku)){const p=P.find(y=>y.sku===x.sku);if(!p||p.stock<x.qty)return{ok:false,msg:'Stok '+x.name+' tidak cukup.'};x.cost=p.cost||0}
+  i.items.filter(x=>x.sku).forEach(x=>changeStock(x.sku,-x.qty,'Penjualan',i.no));i.status='Tutup';i.closeT=stamp();DB.write(K.inv,I);log('Faktur '+i.no+' ditutup');return{ok:true}}
+function payFaktur(id,method,paid){const I=DB.read(K.inv,[]),i=I.find(x=>x.id===id);if(!i||i.status!=='Tutup')return{ok:false,msg:'Faktur belum ditutup atau sudah dibayar.'};
+  const t=invT(i).total;paid=paid==null||paid===''?t:+paid;if(!['Tunai','QRIS','Transfer'].includes(method))return{ok:false,msg:'Metode tidak valid.'};if(paid<t)return{ok:false,msg:'Nominal bayar kurang dari total.'};
+  Object.assign(i,{status:'Lunas',method,paid,change:paid-t,payT:stamp(),payDate:dOf(stamp())});DB.write(K.inv,I);
+  cash('in','Pendapatan servis','Pembayaran '+i.no+' · '+i.plat,t,method,i.id);
+  if(i.woId)setWO(i.woId,{paid:true,status:'Siap diambil'},'Dibayar '+i.no);log('Faktur '+i.no+' lunas ('+method+')');notify('Faktur lunas',i.no+' · '+rp(t)+' · '+method+(_dummy?' (dummy)':''));return{ok:true}}
+function rollbackInvoice(id){const I=DB.read(K.inv,[]),i=I.find(x=>x.id===id);if(!i||!['Tutup','Lunas'].includes(i.status))return{ok:false,msg:'Faktur tidak bisa di-rollback.'};
+  if(i.status==='Lunas'){DB.write(K.cashb,DB.read(K.cashb,[]).filter(c=>!(c.ref===id&&c.type==='in')));['method','paid','change','payT','payDate'].forEach(k=>delete i[k])}
+  i.items.filter(x=>x.sku).forEach(x=>changeStock(x.sku,x.qty,'Rollback faktur',i.no));
+  i.status='Draft';i.rb=(i.rb||0)+1;DB.write(K.inv,I);if(i.woId)setWO(i.woId,{paid:false},'Faktur '+i.no+' di-rollback');log('Faktur '+i.no+' di-rollback ke Faktur Service');return{ok:true}}
+function deleteInvoice(id){const I=DB.read(K.inv,[]),i=I.find(x=>x.id===id);if(!i||i.status!=='Draft')return{ok:false,msg:'Hanya faktur draft yang bisa dihapus.'};DB.write(K.inv,I.filter(x=>x.id!==id));log('Faktur '+i.no+' dihapus');return{ok:true}}
+function invFromWO(woId){const w=DB.read(K.wo,[]).find(x=>x.id===woId);if(!w)return{ok:false,msg:'Work order tidak ditemukan.'};
+  const ex=DB.read(K.inv,[]).find(i=>i.woId===woId&&i.status!=='Lunas');if(ex)return{ok:true,inv:ex};
+  let C=DB.read(K.cust,[]),c=C.find(x=>w.plat&&normPlat(x.plat)===normPlat(w.plat));
+  if(!c){if(!w.plat)return{ok:false,msg:'Work order tanpa No. Polisi: buat faktur lewat menu Faktur Service.'};c={id:uid('C'),name:w.cust||'Pelanggan',motor:w.motor||'',plat:w.plat,hp:'',addr:'',created:stamp()};C.push(c);DB.write(K.cust,C)}
+  const r=createInvoice(c.id,{woId,mech:w.mech||'',note:w.job||''});return r}
+function dayReport(d){const I=DB.read(K.inv,[]).filter(i=>i.status==='Lunas'&&i.payDate===d),C=DB.read(K.cashb,[]),T=i=>invT(i).total,by=m=>I.filter(i=>i.method===m);
+  const inc=sumBy(I,T),qr=sumBy(by('QRIS'),T),tf=sumBy(by('Transfer'),T),tn=sumBy(by('Tunai'),T),outs=C.filter(c=>c.type==='out'&&dOf(c.t)===d),out=sumBy(outs,c=>c.amount),outT=sumBy(outs.filter(c=>c.method==='Tunai'),c=>c.amount);
+  const awal=sumBy(C.filter(c=>c.method==='Tunai'&&(dOf(c.t)<d||(c.cat==='Modal awal'&&dOf(c.t)===d))),c=>c.type==='in'?c.amount:-c.amount);
+  return{d,awal,inc,qr,tf,tn,out,outs,sisa:awal+inc-out,cash:awal+tn-outT,qrL:by('QRIS'),tfL:by('Transfer')}}
+function dailyRows(f,t){const I=DB.read(K.inv,[]),o=[];if(!f||!t||f>t)return o;
+  for(let d=new Date(f+'T12:00:00'),n=0;dOf(d)<=t&&n<400;d.setDate(d.getDate()+1),n++){const k=dOf(d),p=I.filter(i=>i.status==='Lunas'&&i.payDate===k),pr=p.flatMap(i=>i.items.filter(x=>x.type==='part'));
+    o.push({d:k,inc:sumBy(p,i=>invT(i).total),units:I.filter(i=>i.date===k).length,pq:sumBy(pr,x=>x.qty),pv:sumBy(pr,x=>x.qty*x.price),ret:I.filter(i=>i.date===k&&i.ret).length})}return o}
 function exportAll(){const o={};Object.entries(K).forEach(([n,k])=>o[k]=DB.read(k,null));return JSON.stringify(o,null,1)}
 function importAll(txt){const o=JSON.parse(txt);const ok=Object.values(K).filter(k=>k!==K.theme);
   if(!o||typeof o!=='object'||!o[K.products]||!o[K.wo])throw new Error('Format backup tidak dikenali');ok.forEach(k=>{if(o[k]!=null)DB.write(k,o[k])})}
 function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click()}
 
 /* ===== Akun demo & sesi (BUKAN keamanan sungguhan: semua ada di browser) ===== */
-const USERS=[{u:'admin',p:'admin123',role:'admin',name:'Admin Demo'},{u:'owner',p:'owner123',role:'owner',name:'Owner Demo'},{u:'kasir',p:'kasir123',role:'kasir',name:'Kasir Demo'}];
-const homeOf=r=>r==='owner'?'owner.html':r==='kasir'?'kasir.html':'admin.html';
+const USERS=[{u:'admin',p:'admin123',role:'admin',name:'Admin Demo'},{u:'owner',p:'owner123',role:'owner',name:'Owner Demo'}];
+const homeOf=r=>r==='owner'?'owner.html':'admin.html';
 function login(u,p){const a=DB.read(K.users,[]).find(x=>x.u===u&&x.p===p);if(!a)return null;const s={u:a.u,role:a.role,name:a.name};try{sessionStorage.setItem('motocare_session',JSON.stringify(s))}catch(e){return null}return s}
 function logout(){try{sessionStorage.removeItem('motocare_session')}catch(e){}location.href='login.html'}
 function guard(roles){const s=sess();if(!s||!roles.includes(s.role)){location.replace('login.html');return null}return s}
@@ -124,15 +150,14 @@ function payDebt(id){const L=DB.read(K.purch,[]),b=L.find(x=>x.id===id);if(!b||b
   const amt=b.total-b.paid;b.paid=b.total;b.status='Lunas';DB.write(K.purch,L);cash('out','Pelunasan utang supplier','Pelunasan '+id+' · '+b.supplier,amt,b.method,id);log('Utang '+id+' dilunasi');return{ok:true}}
 function stockOut(sku,qty,reason){if(!sku||!(qty>0)||!Number.isInteger(qty)||!reason)return{ok:false,msg:'Produk, jumlah (bulat), dan alasan wajib.'};
   const r=changeStock(sku,-qty,reason,'manual');if(r.ok)log('Barang keluar '+sku+' x'+qty+' ('+reason+')');return r}
-function manualCash(type,cat,desc,amount,method){if(!['in','out'].includes(type)||!(amount>0)||!desc||desc.trim().length<3)return{ok:false,msg:'Jenis, keterangan, dan nominal (>0) wajib.'};
-  cash(type,cat||'Lainnya',desc.trim(),amount,method,null);log('Kas '+(type==='in'?'masuk':'keluar')+' '+amount);return{ok:true}}
-function stats(){const T=DB.read(K.tx,[]),C=DB.read(K.cashb,[]),P=DB.read(K.products,[]),W=DB.read(K.wo,[]).filter(w=>!w.demo),B=DB.read(K.bookings,[]),PB=DB.read(K.purch,[]);
-  const td=new Date().toDateString(),ok=T.filter(t=>t.status==='Lunas'),tod=ok.filter(t=>new Date(t.t).toDateString()===td),sum=(a,f)=>a.reduce((x,i)=>x+f(i),0);
-  const ki=sum(C.filter(c=>c.type==='in'),c=>c.amount),ko=sum(C.filter(c=>c.type==='out'),c=>c.amount);
-  return{omzetHari:sum(tod,t=>t.total),trxHari:tod.length,omzetAll:sum(ok,t=>t.total),trxAll:ok.length,kasIn:ki,kasOut:ko,saldo:ki-ko,
-  motorHari:W.filter(w=>w.date===today()).length,aktif:W.filter(w=>!['Selesai','Siap diambil','Dibatalkan'].includes(w.status)).length,
+function manualCash(type,cat,desc,amount,method,at){if(!['in','out'].includes(type)||!(amount>0)||!desc||desc.trim().length<3)return{ok:false,msg:'Jenis, keterangan, dan nominal (>0) wajib.'};
+  cash(type,cat||'Lainnya',desc.trim(),amount,method,null,at);log('Kas '+(type==='in'?'masuk':'keluar')+' '+amount);return{ok:true}}
+function stats(){const I=DB.read(K.inv,[]),ok=I.filter(i=>i.status==='Lunas'),C=DB.read(K.cashb,[]),P=DB.read(K.products,[]),W=DB.read(K.wo,[]).filter(w=>!w.demo),B=DB.read(K.bookings,[]),PB=DB.read(K.purch,[]),td=today(),tod=ok.filter(i=>i.payDate===td),T=i=>invT(i).total;
+  const ki=sumBy(C.filter(c=>c.type==='in'),c=>c.amount),ko=sumBy(C.filter(c=>c.type==='out'),c=>c.amount);
+  return{omzetHari:sumBy(tod,T),trxHari:tod.length,omzetAll:sumBy(ok,T),trxAll:ok.length,kasIn:ki,kasOut:ko,saldo:ki-ko,
+  motorHari:I.filter(i=>i.date===td).length,aktif:W.filter(w=>!['Selesai','Siap diambil','Dibatalkan'].includes(w.status)).length,
   bookingBaru:B.filter(b=>b.status==='Menunggu konfirmasi').length,kritis:P.filter(p=>p.stock<=p.min),
-  nilai:sum(P.filter(p=>p.cost!=null),p=>p.stock*p.cost),tanpaHPP:P.filter(p=>p.cost==null).length,utang:sum(PB,p=>p.total-p.paid)}}
+  nilai:sumBy(P.filter(p=>p.cost!=null),p=>p.stock*p.cost),tanpaHPP:P.filter(p=>p.cost==null).length,utang:sumBy(PB,p=>p.total-p.paid)}}
 
 /* ===== Notifikasi, data dummy, simulasi live (hanya untuk pengujian) ===== */
 const _d=()=>_dummy?{dummy:true}:{};
@@ -147,36 +172,40 @@ function asDummy(fn,at){const o=[_dummy,_clock];_dummy=true;_clock=at||null;try{
 function dummyWO(o){const W=DB.read(K.wo,[]),n=W.filter(w=>!w.demo).length+1,st=o.status||'Menunggu';
   const w={id:uid('WO'),no:'W-'+String(n).padStart(3,'0'),cust:pick(NAMES),plat:plate(),motor:pick(MOTORS),job:o.job,note:'',mech:pick(MECH),status:st,date:today(),eta:'',demo:false,dummy:true,paid:false,hist:[{t:stamp(),s:st,n:'Data dummy'}]};
   W.push(w);DB.write(K.wo,W);return w}
-function dummySale(){const s=pick(DB.read(K.services,[])),P=DB.read(K.products,[]).filter(p=>p.stock>2),w=dummyWO({job:s.name,status:'Selesai'});
-  const items=[{name:s.name,qty:1,price:s.fee,sku:null}];
-  if(P.length&&Math.random()<.7){const p=pick(P);items.push({name:p.name,qty:1+rnd(2),price:p.price,sku:p.sku})}
-  const sub=items.reduce((a,i)=>a+i.qty*i.price,0),disc=Math.random()<.15?Math.round(sub*.05/1000)*1000:0,tot=sub-disc,m=pick(['Tunai','Tunai','Transfer','QRIS']);
-  return payInvoice(w.id,items,disc,m,m==='Tunai'?Math.ceil(tot/50000)*50000:tot)}
+function dummyCust(){const C=DB.read(K.cust,[]);if(C.length&&Math.random()<(C.length>30?.85:.4))return pick(C);const c={id:uid('C'),name:pick(NAMES),motor:pick(MOTORS),plat:plate(),hp:'08120000'+(1000+rnd(8999)),addr:'Jl. Contoh No. '+(1+rnd(90)),created:stamp(),dummy:true};C.push(c);DB.write(K.cust,C);return c}
+function dummySale(){const c=dummyCust(),r=createInvoice(c.id);if(!r.ok)return r;const s=pick(DB.read(K.services,[])),P=DB.read(K.products,[]).filter(p=>p.stock>2),items=[{type:'jasa',name:s.name,qty:1,price:s.fee}];
+  if(P.length&&Math.random()<.7){const p=pick(P);items.push({type:'part',sku:p.sku,name:p.name,qty:1+rnd(2),price:p.price})}
+  const sub=sumBy(items,i=>i.qty*i.price),disc=Math.random()<.15?Math.round(sub*.05/1000)*1000:0;
+  saveInvoice(r.inv.id,{items,disc,mech:pick(MECH),km:String(5000+rnd(60000)),ret:Math.random()<.08,note:'Data dummy'});
+  const k=closeInvoice(r.inv.id);if(!k.ok)return k;return payFaktur(r.inv.id,pick(['Tunai','Tunai','Transfer','QRIS']))}
 function dummyBooking(){const s=pick(DB.read(K.services,[])),B=DB.read(K.bookings,[]);
   const b={id:uid('B'),code:'BK-'+today().slice(2).replace(/-/g,'')+'-D'+(100+rnd(900)),nama:pick(NAMES),wa:'08120000'+(1000+rnd(8999)),plat:plate(),motor:pick(MOTORS),layanan:s.name,tgl:today(),jam:pick(['09:00','11:00','13:00','15:00']),catatan:'',status:'Menunggu konfirmasi',created:stamp(),dummy:true};
   B.push(b);DB.write(K.bookings,B);return b}
 function seedDummy(){
-  if(DB.read(K.tx,[]).some(t=>t.dummy))return{ok:false,msg:'Data dummy sudah ada. Hapus dulu bila ingin membuat ulang.'};
-  const base=new Date(),at=(dd,min)=>{const d=new Date(base);d.setDate(d.getDate()-dd);d.setHours(0,min,0,0);return d};
-  _quiet=true;
+  if(DB.read(K.inv,[]).some(t=>t.dummy)||DB.read(K.purch,[]).some(t=>t.dummy))clearDummy();
+  const base=new Date(),N=90,SUP=['Toko Bali','Jaya Motor','Sinar Motor'],at=(dd,min)=>{const d=new Date(base);d.setDate(d.getDate()-dd);d.setHours(0,min,0,0);return d},nowMin=base.getHours()*60+base.getMinutes(),cost=p=>Math.round(p.price*.68/1000)*1000;
+  _quiet=true;DB._m={};
   try{
-    asDummy(()=>{cash('in','Modal awal','Modal awal kas (dummy)',20000000,'Tunai',null);
-      DB.read(K.products,[]).forEach(p=>addPurchase({sku:p.sku,supplier:'Supplier Contoh',invoice:'INV-D-'+p.sku,qty:20,cost:Math.round(p.price*.68/1000)*1000,status:'Lunas',method:'Transfer'}))},at(7,480));
-    asDummy(()=>addPurchase({sku:'VBT-008',supplier:'Supplier Contoh',invoice:'INV-D-UTANG',qty:10,cost:95000,status:'Utang',method:'Transfer'}),at(2,600));
-    for(let dd=6;dd>=0;dd--){
-      const nowMin=base.getHours()*60+base.getMinutes(),maxM=dd===0?Math.max(500,nowMin):1020,n=dd===0?4+rnd(3):4+rnd(6);
-      const slots=[...Array(n)].map(()=>480+rnd(Math.max(10,maxM-480))).sort((a,b)=>a-b);
-      slots.forEach(m=>asDummy(()=>dummySale(),at(dd,m)));
-      if(dd===5)asDummy(()=>manualCash('out','Gaji / upah','Gaji mekanik minggu ini',1500000,'Tunai'),at(5,1000));
-      if(dd===3)asDummy(()=>manualCash('out','Listrik','Tagihan listrik bengkel',350000,'Transfer'),at(3,900));
-      if(dd===1)asDummy(()=>manualCash('out','Operasional','Beli perlengkapan bengkel',120000,'Tunai'),at(1,800));
+    asDummy(()=>{cash('in','Modal awal','Modal awal kas (dummy)',15000000,'Tunai',null);DB.read(K.products,[]).forEach((p,x)=>addPurchase({sku:p.sku,supplier:SUP[x%3],invoice:'INV-D-'+p.sku,qty:30,cost:cost(p),status:'Lunas',method:'Transfer',invDate:today()}))},at(N+1,480));
+    for(let dd=N;dd>=0;dd--){
+      const dow=at(dd,0).getDay();
+      if(dd%20===8)asDummy(()=>DB.read(K.products,[]).forEach((p,x)=>{const u=dd<50&&(x+dd)%2===0;addPurchase({sku:p.sku,supplier:SUP[x%3],invoice:'INV-D-'+dd+'-'+p.sku,qty:15+rnd(10),cost:cost(p),status:u?'Utang':'Lunas',method:'Transfer',invDate:today(),due:u?addDays(14+rnd(14)):'',note:u?'Tempo pembayaran':''})}),at(dd,500));
+      const maxM=dd===0?Math.max(500,nowMin):1020,n=dow===0?0:(dd===0?3+rnd(3):3+rnd(5)+(dow===6?2:0));
+      [...Array(n)].map(()=>480+rnd(Math.max(10,maxM-480))).sort((a,b)=>a-b).forEach(m=>asDummy(()=>dummySale(),at(dd,m)));
+      asDummy(()=>{if(dow!==0&&Math.random()<.6)manualCash('out','Beli Bensin','Beli bensin operasional',20000+rnd(5)*10000,'Tunai');
+        if(dd%7===0)manualCash('out','Gaji / upah','Gaji mekanik minggu ini',1500000,'Tunai');
+        if(dd%30===3)manualCash('out','Listrik','Tagihan listrik bengkel',350000,'Transfer');
+        if(dd%14===2)manualCash('out','Sumbangan','Sumbangan kegiatan warga',100000,'Tunai');
+        if(dd%9===4)manualCash('out','Beli Busi','Beli busi untuk stok bengkel',130000,'Tunai')},at(dd,1000));
     }
-    asDummy(()=>{['Menunggu','Pemeriksaan awal','Sedang dikerjakan','Sedang dikerjakan','Menunggu spare part','Menunggu persetujuan pelanggan','Selesai'].forEach(st=>dummyWO({job:pick(DB.read(K.services,[])).name,status:st}));for(let i=0;i<3;i++)dummyBooking()});
-  }finally{_quiet=false}
-  notify('Data dummy dibuat','Transaksi 7 hari, kas, stok, antrean, dan booking contoh');return{ok:true}}
+    asDummy(()=>{for(let i=0;i<4;i++){const c=dummyCust(),r=createInvoice(c.id);if(!r.ok)continue;const s=pick(DB.read(K.services,[]));saveInvoice(r.inv.id,{items:[{type:'jasa',name:s.name,qty:1,price:s.fee}],mech:pick(MECH)});if(i<2)closeInvoice(r.inv.id)}},at(0,Math.max(500,nowMin)));
+    asDummy(()=>{[['KMP-014',4],['BSI-002',0],['VBT-008',7]].forEach(([k,t])=>{const p=DB.read(K.products,[]).find(x=>x.sku===k);if(p&&p.stock!==t)changeStock(k,t-p.stock,'Penyesuaian: stock opname (dummy)','opname')});
+      ['Menunggu','Pemeriksaan awal','Sedang dikerjakan','Sedang dikerjakan','Menunggu spare part','Menunggu persetujuan pelanggan','Selesai'].forEach(st=>dummyWO({job:pick(DB.read(K.services,[])).name,status:st}));for(let i=0;i<3;i++)dummyBooking()},at(0,nowMin));
+  }finally{_quiet=false;DB.flush()}
+  notify('Data dummy dibuat','Transaksi 3 bulan, pelanggan, stok, kas, hutang, antrean, booking');return{ok:true}}
 function clearDummy(){
   const P=DB.read(K.products,[]),net={};DB.read(K.moves,[]).filter(m=>m.dummy).forEach(m=>{net[m.sku]=(net[m.sku]||0)+m.qty});P.forEach(p=>{if(net[p.sku])p.stock=Math.max(0,p.stock-net[p.sku])});
-  [K.moves,K.cashb,K.tx,K.purch,K.wo,K.bookings,K.logs].forEach(k=>DB.write(k,DB.read(k,[]).filter(x=>!x.dummy)));
+  [K.moves,K.cashb,K.tx,K.purch,K.wo,K.bookings,K.logs,K.inv,K.cust].forEach(k=>DB.write(k,DB.read(k,[]).filter(x=>!x.dummy)));
   const rest=DB.read(K.purch,[]);P.forEach(p=>{if(!rest.some(b=>b.sku===p.sku))delete p.cost});DB.write(K.products,P);return{ok:true}}
 let _sim=null;
 function simTick(){asDummy(()=>{const r=Math.random();

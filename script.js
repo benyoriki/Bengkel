@@ -89,4 +89,4 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 $('#pChips').onclick=e=>{const c=e.target.dataset.c;if(c){pSel=pSel===c?null:c;renderProducts()}};
 matchMedia('(max-width:860px)').onchange=renderProducts;
 $('#splash').onclick=e=>e.currentTarget.remove();
-setTimeout(()=>{const x=$('#splash');x&&x.remove()},3400);
+{const x=$('#splash');if(x&&!document.documentElement.classList.contains('sp'))x.remove();else setTimeout(()=>{const y=$('#splash');y&&y.remove()},1500)}
